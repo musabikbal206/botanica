@@ -60,6 +60,18 @@
         .quiz-btn.correct { background-color: #d1fae5; border-color: #10b981; color: #065f46; }
         .quiz-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.7; }
         
+        /* Modal Animation */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s ease-out; }
+        .modal-exit { opacity: 1; transform: scale(1); }
+        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: all 0.2s ease-in; }
+
+        /* Scrollbar personalizzata per il modale */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #059669; }
+
         /* Loading Skeleton */
         .skeleton {
             background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
@@ -75,7 +87,7 @@
 <body class="text-gray-800 min-h-screen flex flex-col">
 
     <!-- Header -->
-    <header class="bg-emerald-900 text-white p-4 sticky top-0 z-50 border-b-4 border-emerald-600 shadow-md">
+    <header class="bg-emerald-900 text-white p-4 sticky top-0 z-40 border-b-4 border-emerald-600 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="bg-emerald-100 p-2 rounded-full">
@@ -102,13 +114,13 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8">
+    <main class="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8 relative">
         
         <!-- MODE: LIST -->
         <div id="view-list" class="view-section block animate-fade-in">
             <div class="text-center mb-10 max-w-2xl mx-auto">
                 <h2 class="text-4xl font-bold text-emerald-950 mb-3 italic">Atlante Botanico</h2>
-                <p class="text-gray-600">Esplora la collezione completa. Le immagini sono caricate automaticamente dal web.</p>
+                <p class="text-gray-600">Esplora la collezione completa con le nuove schede dettagliate.</p>
             </div>
             
             <!-- Search Bar -->
@@ -151,12 +163,12 @@
 
                         <!-- Back -->
                         <div class="flip-card-back flex flex-col p-8 text-white rounded-2xl shadow-inner border-4 border-emerald-700/50">
-                            <div class="flex-1 flex flex-col items-center justify-center text-center">
+                            <div class="flex-1 flex flex-col items-center justify-center text-center overflow-hidden">
                                 <i data-lucide="flower" class="w-12 h-12 text-emerald-300 mb-4 opacity-80"></i>
-                                <h2 id="fc-sci-name" class="text-3xl font-bold italic mb-2 font-serif text-white drop-shadow-md">Scientific Name</h2>
+                                <h2 id="fc-sci-name" class="text-2xl md:text-3xl font-bold italic mb-2 font-serif text-white drop-shadow-md">Scientific Name</h2>
                                 <p id="fc-common-name" class="text-lg text-emerald-200 font-bold uppercase tracking-widest mb-6 border-b border-emerald-400/30 pb-2">Nome Comune</p>
                                 
-                                <div class="w-full text-left bg-white/10 p-5 rounded-xl backdrop-blur-sm space-y-3">
+                                <div class="w-full text-left bg-white/10 p-5 rounded-xl backdrop-blur-sm space-y-3 overflow-y-auto max-h-[200px] custom-scrollbar">
                                     <div>
                                         <span class="text-emerald-300 text-xs font-bold uppercase block">Famiglia</span>
                                         <span id="fc-family" class="text-white font-medium">...</span>
@@ -215,7 +227,7 @@
                             
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 mb-6 relative">
                                 <i data-lucide="quote" class="absolute -top-3 -left-2 text-emerald-200 w-8 h-8 fill-current"></i>
-                                <p id="quiz-hint" class="text-gray-600 italic text-sm pl-4 relative z-10">...</p>
+                                <p id="quiz-hint" class="text-gray-600 italic text-sm pl-4 relative z-10 line-clamp-4">...</p>
                             </div>
 
                             <div id="quiz-options" class="space-y-3">
@@ -236,6 +248,59 @@
 
     </main>
 
+    <!-- DETAILS MODAL -->
+    <div id="details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="app.closeDetails()"></div>
+        
+        <!-- Modal Content -->
+        <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row animate-fade-in">
+            <!-- Close Button -->
+            <button onclick="app.closeDetails()" class="absolute top-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all text-gray-600 hover:text-red-500">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Image Section -->
+            <div class="w-full md:w-2/5 h-64 md:h-auto bg-gray-100 relative">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
+                    <span id="modal-common" class="text-emerald-300 font-bold uppercase tracking-widest text-sm mb-1">Nome Comune</span>
+                    <h2 id="modal-scientific" class="text-white text-3xl font-serif italic font-bold leading-tight">Scientific Name</h2>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="w-full md:w-3/5 p-8 overflow-y-auto custom-scrollbar bg-white">
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span id="modal-family" class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full uppercase tracking-wider">Family</span>
+                    <span id="modal-order" class="px-3 py-1 bg-blue-50 text-blue-800 text-xs font-bold rounded-full uppercase tracking-wider">Order</span>
+                </div>
+
+                <div class="space-y-8">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3 text-emerald-800">
+                            <i data-lucide="align-left" class="w-5 h-5"></i>
+                            <h3 class="font-bold text-lg uppercase tracking-wide">Caratteristiche Generali</h3>
+                        </div>
+                        <p id="modal-chars" class="text-gray-600 leading-relaxed text-sm text-justify">
+                            <!-- Descrizione dettagliata -->
+                        </p>
+                    </div>
+
+                    <div class="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
+                        <div class="flex items-center gap-2 mb-3 text-emerald-800">
+                            <i data-lucide="flask-conical" class="w-5 h-5"></i>
+                            <h3 class="font-bold text-lg uppercase tracking-wide">Droga e Principi Attivi</h3>
+                        </div>
+                        <p id="modal-drug" class="text-gray-700 leading-relaxed text-sm text-justify">
+                            <!-- Principi attivi dettagliati -->
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-emerald-900 text-emerald-400/60 py-8 text-center mt-12 border-t border-emerald-800">
         <p class="text-sm">Seni Seviyorum My Everything, Ti Amo, Ti Luno ❤️</p>
@@ -243,67 +308,598 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // DATI COMPLETI
+        // DATI COMPLETI ESTRATTI DAL PDF "TAVOLE BOTANICHE"
         const plantDatabase = [
-            { id: 1, scientific: "Dryopteris filix-mas", common: "Felce maschio", family: "Dryopteridaceae", desc: "Felce con grandi fronde pennatosette. Rizoma sotterraneo con squame color ruggine.", active: "Filicina" },
-            { id: 2, scientific: "Ginkgo biloba", common: "Ginkgo", family: "Ginkgoaceae", desc: "Foglie a ventaglio bilobate. Pianta dioica (macroblasti e brachiblasti).", active: "Ginkgolidi, Flavonoidi" },
-            { id: 3, scientific: "Pinus sylvestris", common: "Pino silvestre", family: "Pinaceae", desc: "Aghi riuniti a due. Corteccia grigia in basso, rossiccia in alto.", active: "Olio essenziale, Resina" },
-            { id: 4, scientific: "Taxus baccata", common: "Tasso", family: "Taxaceae", desc: "Aghi appiattiti. Seme circondato da arillo rosso carnoso. Molto tossica.", active: "Tassina, Taxolo" },
-            { id: 5, scientific: "Ephedra distachya", common: "Efedra", family: "Ephedraceae", desc: "Cespugliosa, rami sottili e angolosi. Foglie squamose.", active: "Efedrina" },
-            { id: 6, scientific: "Laurus nobilis", common: "Alloro", family: "Lauraceae", desc: "Sempreverde aromatico. Foglie coriacee lanceolate, frutti neri.", active: "Olio essenziale (Cineolo)" },
-            { id: 7, scientific: "Cinnamomum camphora", common: "Canfora", family: "Lauraceae", desc: "Grande albero sempreverde. Foglie coriacee. Distillazione del legno.", active: "Canfora" },
-            { id: 8, scientific: "Cinnamomum zeylanicum", common: "Cannella", family: "Lauraceae", desc: "Corteccia dei getti giovani. Odore aromatico caratteristico.", active: "Aldeide cinnamica" },
-            { id: 9, scientific: "Peumus boldus", common: "Boldo", family: "Monimiaceae", desc: "Sempreverde cileno. Foglie opposte, coriacee, ovali. Odore canforato.", active: "Boldina" },
-            { id: 10, scientific: "Aconitum napellus", common: "Aconito", family: "Ranunculaceae", desc: "Fiori blu a elmo. Radici tuberizzate. Altamente tossica.", active: "Aconitina" },
-            { id: 11, scientific: "Adonis vernalis", common: "Adonide", family: "Ranunculaceae", desc: "Fiori gialli grandi, foglie pennatosette. Cardiotonico.", active: "Cardenolidi (Cimarina)" },
-            { id: 12, scientific: "Hydrastis canadensis", common: "Idraste", family: "Ranunculaceae", desc: "Piccola erbacea, rizoma corto, frutto bacca rossa composta.", active: "Idrastina, Berberina" },
-            { id: 13, scientific: "Papaver somniferum", common: "Papavero da oppio", family: "Papaveraceae", desc: "Capsula poricida da cui si estrae lattice (oppio).", active: "Morfina, Codeina" },
-            { id: 14, scientific: "Chelidonium majus", common: "Celidonia", family: "Papaveraceae", desc: "Fiori gialli a 4 petali. Secerne lattice giallo-arancio (verruche).", active: "Copticina, Alcaloidi" },
-            { id: 15, scientific: "Humulus lupulus", common: "Luppolo", family: "Cannabaceae", desc: "Rampicante. Coni femminili con ghiandole resinose (lupulina).", active: "Acidi amari (Umulone)" },
-            { id: 16, scientific: "Cannabis sativa", common: "Canapa", family: "Cannabaceae", desc: "Foglie palmate. Infiorescenze femminili ricche di resina.", active: "THC, CBD" },
-            { id: 17, scientific: "Rheum palmatum", common: "Rabarbaro", family: "Polygonaceae", desc: "Grandi foglie palmato-lobate. Rizoma carnoso.", active: "Antrachinoni (Reina)" },
-            { id: 18, scientific: "Hypericum perforatum", common: "Iperico", family: "Clusiaceae", desc: "Fiori gialli. Foglie con tasche secretorie ('buchi') controluce.", active: "Ipericina" },
-            { id: 19, scientific: "Malva sylvestris", common: "Malva", family: "Malvaceae", desc: "Fiori viola-rosati. Ricca di mucillagini emollienti.", active: "Mucillagini" },
-            { id: 20, scientific: "Althaea officinalis", common: "Altea", family: "Malvaceae", desc: "Foglie vellutate grigio-verdi. Radice emolliente.", active: "Mucillagini" },
-            { id: 21, scientific: "Brassica nigra", common: "Senape nera", family: "Brassicaceae", desc: "Semi scuri piccanti. Contiene sinigroside.", active: "Isotiocianato di allile" },
-            { id: 22, scientific: "Sinapis alba", common: "Senape bianca", family: "Brassicaceae", desc: "Fiori gialli. Semi chiari. Non volatile come la nera.", active: "Sinalboside" },
-            { id: 23, scientific: "Cassia angustifolia", common: "Senna", family: "Fabaceae", desc: "Foglioline lanceolate asimmetriche. Legume appiattito.", active: "Sennosidi" },
-            { id: 24, scientific: "Glycyrrhiza glabra", common: "Liquirizia", family: "Fabaceae", desc: "Radici e stoloni dolci. Legume glabro.", active: "Glicirrizina" },
-            { id: 25, scientific: "Eucalyptus globulus", common: "Eucalipto", family: "Myrtaceae", desc: "Foglie falciformi negli adulti. Odore balsamico forte.", active: "Eucaliptolo" },
-            { id: 26, scientific: "Syzygium aromaticum", common: "Chiodi di garofano", family: "Myrtaceae", desc: "Bottoni fiorali essiccati ricchi di olio essenziale.", active: "Eugenolo" },
-            { id: 27, scientific: "Ricinus communis", common: "Ricino", family: "Euphorbiaceae", desc: "Foglie grandi palmate. Semi marmorizzati. Olio purgante.", active: "Acido ricinoleico, Ricina" },
-            { id: 28, scientific: "Rhamnus purshiana", common: "Cascara", family: "Rhamnaceae", desc: "Corteccia usata come lassativo. Nord America.", active: "Cascarosidi" },
-            { id: 29, scientific: "Frangula alnus", common: "Frangola", family: "Rhamnaceae", desc: "Piccolo albero. Corteccia lassativa. Drupa rossa poi nera.", active: "Franguloside" },
-            { id: 30, scientific: "Erythroxylum coca", common: "Coca", family: "Erythroxylaceae", desc: "Foglie con due linee curve parallele alla nervatura.", active: "Cocaina" },
-            { id: 31, scientific: "Panax ginseng", common: "Ginseng", family: "Araliaceae", desc: "Radice antropomorfa. Foglie palmate a 5.", active: "Ginsenosidi" },
-            { id: 32, scientific: "Foeniculum vulgare", common: "Finocchio", family: "Apiaceae", desc: "Foglie filiformi. Odore anice. Frutti diacheni.", active: "Anetolo" },
-            { id: 33, scientific: "Pimpinella anisum", common: "Anice verde", family: "Apiaceae", desc: "Fiori bianchi. Frutti ovoidi pelosi. Sapore di anice.", active: "Anetolo" },
-            { id: 34, scientific: "Gentiana lutea", common: "Genziana", family: "Gentianaceae", desc: "Fiori gialli a stella verticillati. Radice amara.", active: "Gentiopicroside" },
-            { id: 35, scientific: "Strophanthus gratus", common: "Strofanto", family: "Apocynaceae", desc: "Semi con ciuffetto di peli. Cardiotonico.", active: "Ouabaina (G-strofantina)" },
-            { id: 36, scientific: "Rauwolfia serpentina", common: "Rauwolfia", family: "Apocynaceae", desc: "Radici tortuose. Usata per ipertensione.", active: "Reserpina" },
-            { id: 37, scientific: "Catharanthus roseus", common: "Pervinca del Madagascar", family: "Apocynaceae", desc: "Fiore rosa simile alla pervinca. Antitumorale.", active: "Vincristina, Vinblastina" },
-            { id: 38, scientific: "Atropa belladonna", common: "Belladonna", family: "Solanaceae", desc: "Bacche nere lucide col calice a stella. Fiori violacei.", active: "Atropina" },
-            { id: 39, scientific: "Hyoscyamus niger", common: "Giusquiamo", family: "Solanaceae", desc: "Corolla giallastra reticolata di viola. Fetida.", active: "Scopolamina" },
-            { id: 40, scientific: "Datura stramonium", common: "Stramonio", family: "Solanaceae", desc: "Fiori bianchi a tromba. Capsula spinosa. Fetida.", active: "Atropina, Scopolamina" },
-            { id: 41, scientific: "Lavandula angustifolia", common: "Lavanda", family: "Lamiaceae", desc: "Fiori in spighe blu-violette. Profumo caratteristico.", active: "Linalolo" },
-            { id: 42, scientific: "Mentha x piperita", common: "Menta", family: "Lamiaceae", desc: "Fusto quadrangolare rossastro. Forte odore mentolato.", active: "Mentolo" },
-            { id: 43, scientific: "Melissa officinalis", common: "Melissa", family: "Lamiaceae", desc: "Odore di limone. Foglie rugose.", active: "Citrale" },
-            { id: 44, scientific: "Salvia officinalis", common: "Salvia", family: "Lamiaceae", desc: "Foglie rugose grigio-verdi. Odore aromatico.", active: "Tujone" },
-            { id: 45, scientific: "Rosmarinus officinalis", common: "Rosmarino", family: "Lamiaceae", desc: "Foglie aghiiformi, pagina inferiore bianca.", active: "Olio essenziale" },
-            { id: 46, scientific: "Thymus vulgaris", common: "Timo", family: "Lamiaceae", desc: "Piccolo arbusto aromatico. Foglie piccolissime.", active: "Timolo" },
-            { id: 47, scientific: "Plantago afra", common: "Psillio", family: "Plantaginaceae", desc: "Semi usati come lassativo meccanico (mucillagini).", active: "Mucillagini" },
-            { id: 48, scientific: "Digitalis purpurea", common: "Digitale", family: "Scrophulariaceae", desc: "Fiori a ditale porpora maculati. Foglie vellutate.", active: "Digitossina" },
-            { id: 49, scientific: "Cinchona succirubra", common: "China", family: "Rubiaceae", desc: "Corteccia rossa. Antimalarico e amaro.", active: "Chinina" },
-            { id: 50, scientific: "Cephaelis ipecacuanha", common: "Ipecacuana", family: "Rubiaceae", desc: "Radice inanellata. Emetico ed espettorante.", active: "Emetina" },
-            { id: 51, scientific: "Valeriana officinalis", common: "Valeriana", family: "Valerianaceae", desc: "Rizoma odore sgradevole. Fiori rosa/bianchi.", active: "Valepotriati" },
-            { id: 52, scientific: "Matricaria chamomilla", common: "Camomilla", family: "Asteraceae", desc: "Capolini con ricettacolo conico cavo. Fiori bianchi.", active: "Camazulene, Bisabololo" },
-            { id: 53, scientific: "Anthemis nobilis", common: "Camomilla romana", family: "Asteraceae", desc: "Ricettacolo pieno con pagliette. Più aromatica.", active: "Lattoni sesquiterpenici" },
-            { id: 54, scientific: "Artemisia annua", common: "Artemisia", family: "Asteraceae", desc: "Molto profumata. Antimalarico.", active: "Artemisinina" },
-            { id: 55, scientific: "Silybum marianum", common: "Cardo mariano", family: "Asteraceae", desc: "Foglie venate di bianco con spine. Fiori porpora.", active: "Silimarina" },
-            { id: 56, scientific: "Colchicum autumnale", common: "Colchico", family: "Liliaceae", desc: "Fiori rosa in autunno senza foglie. Bulbo tossico.", active: "Colchicina" },
-            { id: 57, scientific: "Urginea maritima", common: "Scilla", family: "Liliaceae", desc: "Bulbo enorme. Cardiotonico.", active: "Scillarene" },
-            { id: 58, scientific: "Allium sativum", common: "Aglio", family: "Amaryllidaceae", desc: "Bulbo composto da spicchi. Odore solforato.", active: "Alliina" },
-            { id: 59, scientific: "Aloe barbadensis", common: "Aloe vera", family: "Aloeaceae", desc: "Foglie succulente a rosetta con spine ai margini.", active: "Aloina, Acemannano" }
+            {
+                id: 1,
+                scientific: "Dryopteris filix-mas",
+                common: "Felce maschio",
+                family: "Dryopteridaceae",
+                order: "Dryopteridales",
+                desc: "Felce con grandi fronde pennatosette. Rizoma sotterraneo con squame color ruggine.",
+                characteristics: "Felce maschio che presenta grandi fronde pennatosette, inserite sul rizoma sotterraneo. I piccioli sono ricoperti di squame membranose, di color ruggine, che rivestono anche il rachide e le nervature secondarie. È una specie che vive nel sottobosco.",
+                drug_active: "La droga è costituita dal rizoma con un diametro di circa 2cm rivestito da palee, raccolto in autunno inverno. Il suo colore è brunastro, l'odore debole, il sapore inizialmente dolce, poi amaro nauseante. È stata utilizzata in medicina come nematocida e tenicida, è una droga tossica che deve essere impiegata con cautela. Il principio attivo è costituito da derivati del floroglucinolo indicati con il nome di filicina."
+            },
+            {
+                id: 2,
+                scientific: "Ginkgo biloba",
+                common: "Ginkgo",
+                family: "Ginkgoaceae",
+                order: "Ginkgoales",
+                desc: "Foglie a ventaglio bilobate. Pianta dioica (macroblasti e brachiblasti).",
+                characteristics: "Pianta che può raggiungere i 30 m di altezza e con un diametro del tronco di 1 m. Ha rami lunghi con foglie alterne (macroblasti) e rami corti con internodi quasi assenti (brachiblasti). Le foglie hanno forma a ventaglio e sono percorse da nervature dicotomiche, sono caduche e bilobate.",
+                drug_active: "Le foglie costituiscono la droga, contengono flavonoidi, diterpeni (ginkgolidi A, B, C) e sesquiterpeni. L'estratto di Ginkgo è ritenuto un vasoregolatore, vasodilatatore arterioso e vasocostrittore venoso. Inibitore dell'aggregazione piastrinica, migliora l'irrorazione tissutale. Usato per insufficienza cerebrale e disturbi circolatori."
+            },
+            {
+                id: 3,
+                scientific: "Pinus sylvestris",
+                common: "Pino silvestre",
+                family: "Pinaceae",
+                order: "Pinales",
+                desc: "Aghi riuniti a due. Corteccia grigia in basso, rossiccia in alto.",
+                characteristics: "Pianta sempreverde che raggiunge i 25-30 m. La corteccia è grigio-cenerino in basso, rosso-mattone in alto. Le foglie, aghiformi, sono riunite a due su rametti corti. I coni femminili diventano pigne ovali-oblunghe.",
+                drug_active: "La droga è contenuta nelle gemme, con odore e sapore aromatici e resinosi. Contengono glucidi, resina, essenza (pinene e limonene), coniferoside e un principio amaro (pinipicrina). Hanno funzione balsamica ed espettorante. Dalla distillazione del legno si ottiene il catrame vegetale, antisettico."
+            },
+            {
+                id: 4,
+                scientific: "Taxus baccata",
+                common: "Tasso",
+                family: "Taxaceae",
+                order: "Pinales",
+                desc: "Aghi appiattiti. Seme circondato da arillo rosso carnoso. Molto tossica.",
+                characteristics: "Albero sempreverde, dioico. Foglie persistenti, aghiformi, disposte a spirale. Il seme è circondato da un arillo rosso vivo a maturità. Tutta la pianta è tossica tranne l'arillo.",
+                drug_active: "Il principio attivo è la tassina (alcaloide), presente in rami, foglie e semi (0,5-2%). Ha effetto narcotico e paralizzante. Dal Taxus brevifolia (e ora semisintetizzato da T. baccata) si ricava il taxolo (paclitaxel), potente antitumorale che agisce sui microtubuli."
+            },
+            {
+                id: 5,
+                scientific: "Ephedra distachya",
+                common: "Efedra",
+                family: "Ephedraceae",
+                order: "Ephedrales",
+                desc: "Cespugliosa, rami sottili e angolosi. Foglie squamose.",
+                characteristics: "Pianta cespugliosa con rami sottili, angolosi e solchi verticali. Foglie squamose ridotte. Fiori raggruppati in strobili. Il frutto è un falso frutto carnoso e rosso.",
+                drug_active: "Principio attivo principale: efedrina, un protoalcaloide simile alle anfetamine. Ha funzione antispasmodica, vasocostrittrice e broncodilatatrice. Stimolante nervino, usato per ipotensione e come anoressizzante. Contiene anche vitamina C."
+            },
+            {
+                id: 6,
+                scientific: "Laurus nobilis",
+                common: "Alloro",
+                family: "Lauraceae",
+                order: "Laurales",
+                desc: "Sempreverde aromatico. Foglie coriacee lanceolate, frutti neri.",
+                characteristics: "Albero alto fino a 10m. Foglie ovate, verde scuro, coriacee, lucide sopra e opache sotto, molto profumate. Pianta dioica con fiori gialli. Frutti: drupe nere lucide.",
+                drug_active: "Droga: foglie e drupe. Dalle foglie si ottiene essenza (cineolo). Contengono anche lattoni sesquiterpenici e alcaloidi. Dal frutto si ottiene il burro di alloro. Usate per disturbi digestivi."
+            },
+            {
+                id: 7,
+                scientific: "Cinnamomum camphora",
+                common: "Canfora",
+                family: "Lauraceae",
+                order: "Laurales",
+                desc: "Grande albero sempreverde. Foglie coriacee. Distillazione del legno.",
+                characteristics: "Grande albero sempreverde, può vivere più di mille anni. Foglie lanceolate, coriacee, spesse. Fiori bianchi. Frutto a drupa nera.",
+                drug_active: "La canfora si ottiene dalla distillazione del legno. L'olio essenziale può essere frazionato in: frazione leggera (monoterpeni), media (safrolo), pesante (sesquiterpeni). La canfora naturale è analettico cardiaco/respiratorio e antisettico polmonare."
+            },
+            {
+                id: 8,
+                scientific: "Cinnamomum zeylanicum",
+                common: "Cannella",
+                family: "Lauraceae",
+                order: "Laurales",
+                desc: "Corteccia dei getti giovani. Odore aromatico caratteristico.",
+                characteristics: "Albero sempreverde alto 10-15m. Foglie opposte, ovali-allungate. Fiori bianchi. Frutto drupa.",
+                drug_active: "Droga: corteccia dei getti giovani. Contiene cellule secretrici con olio essenziale (aldeide cinnamica, eugenolo). Stimolante aromatico, digestivo, antibatterico e antifungino."
+            },
+            {
+                id: 9,
+                scientific: "Peumus boldus",
+                common: "Boldo",
+                family: "Monimiaceae",
+                order: "Laurales",
+                desc: "Sempreverde cileno. Foglie opposte, coriacee, ovali. Odore canforato.",
+                characteristics: "Albero dioico sempreverde. Foglie opposte, coriacee e ovali, verde opaco. Fiori giallo pallido. Drupe glauche.",
+                drug_active: "Droga: foglie. Odore canforato. Contiene olio essenziale (ascaridolo - tossico), flavonoidi e alcaloidi (boldina). Proprietà epatoprotettrici, diuretiche, coleretiche e colagoghe."
+            },
+            {
+                id: 10,
+                scientific: "Aconitum napellus",
+                common: "Aconito",
+                family: "Ranunculaceae",
+                order: "Ranunculales",
+                desc: "Fiori blu a elmo. Radici tuberizzate. Altamente tossica.",
+                characteristics: "Erbacea perenne con radice tuberizzata. Foglie divise in segmenti. Fiori blu-violacei a forma di elmo. Presenta due radici tuberizzate (una per l'anno in corso, una nuova).",
+                drug_active: "Droga: radici e tuberi. Altamente tossici (0,5-1,9% alcaloidi). Principale: aconitina. Dose letale uomo: 3-6 mg. Estremamente tossica."
+            },
+            {
+                id: 11,
+                scientific: "Adonis vernalis",
+                common: "Adonide",
+                family: "Ranunculaceae",
+                order: "Ranunculales",
+                desc: "Fiori gialli grandi, foglie pennatosette. Cardiotonico.",
+                characteristics: "Erbacea a rizoma corto. Foglie pennatosette. Fiori terminali molto grandi, giallo pallido, numerosi petali.",
+                drug_active: "Droga: pianta intera fiorita (no radice). Contiene cardenolidi (cimarina: k-strofantidina + D-cimarosio) e flavonoidi. Cardiotonico, ma poco usato. Azione sedativa e calmante."
+            },
+            {
+                id: 12,
+                scientific: "Hydrastis canadensis",
+                common: "Idraste",
+                family: "Ranunculaceae",
+                order: "Ranunculales",
+                desc: "Piccola erbacea, rizoma corto, frutto bacca rossa composta.",
+                characteristics: "Piccola erbacea perenne, rizoma corto con radici sottili. Fusto 40-50cm con 2-3 foglie palmato-lobate. Frutto composto da bacche rosse.",
+                drug_active: "Droga: rizoma e radici. Sapore amaro. Principi attivi: alcaloidi isochinolinici (idrastina, berberina). Vasocostrittore, emostatico. La berberina è antibatterica e battericida."
+            },
+            {
+                id: 13,
+                scientific: "Papaver somniferum",
+                common: "Papavero da oppio",
+                family: "Papaveraceae",
+                order: "Papaverales",
+                desc: "Capsula poricida da cui si estrae lattice (oppio).",
+                characteristics: "Pianta annua, fusti robusti 1-1,5m. Grandi fiori solitari con 4 petali caduchi. Frutto capsula poricida (treto).",
+                drug_active: "Droga: oppio (lattice disseccato dalle capsule immature). Contiene alcaloidi: morfina, codeina, tebaina, papaverina. La morfina è analgesico centrale, causa dipendenza."
+            },
+            {
+                id: 14,
+                scientific: "Chelidonium majus",
+                common: "Celidonia",
+                family: "Papaveraceae",
+                order: "Papaverales",
+                desc: "Fiori gialli a 4 petali. Secerne lattice giallo-arancio (verruche).",
+                characteristics: "Erbacea perenne. Foglie pennatosette. Fiori gialli a 4 petali. Dai rami spezzati esce lattice giallo-arancio che scurisce all'aria.",
+                drug_active: "Lattice contiene alcaloidi isochinolinici (copticina, berberina). Usato in medicina popolare per le verruche. Estratto antibatterico e antivirale."
+            },
+            {
+                id: 15,
+                scientific: "Humulus lupulus",
+                common: "Luppolo",
+                family: "Cannabaceae",
+                order: "Urticales",
+                desc: "Rampicante. Coni femminili con ghiandole resinose (lupulina).",
+                characteristics: "Rampicante perenne (fino a 10m). Dioica. Infiorescenze femminili (coni) ricche di brattee fogliacee con ghiandole resinose che secernono lupulina.",
+                drug_active: "Coni contengono olio essenziale, acidi amari (umulone, lupulone) e flavonoidi. Usato per aromatizzare la birra e per proprietà sedative."
+            },
+            {
+                id: 16,
+                scientific: "Cannabis sativa",
+                common: "Canapa",
+                family: "Cannabaceae",
+                order: "Urticales",
+                desc: "Foglie palmate. Infiorescenze femminili ricche di resina.",
+                characteristics: "Annuale alta 2-3m. Foglie palmate lanceolate. Fiori femminili con calice urceolato e brattee ricche di resina.",
+                drug_active: "Droga: foglie e brattee infiorescenze femminili. Ricche di resina con cannabinoidi: THC (tetraidrocannabinolo) e CBD (cannabidiolo)."
+            },
+            {
+                id: 17,
+                scientific: "Rheum palmatum",
+                common: "Rabarbaro",
+                family: "Polygonaceae",
+                order: "Polygonales",
+                desc: "Grandi foglie palmato-lobate. Rizoma carnoso.",
+                characteristics: "Robusto rizoma carnoso. Foglie enormi palmato-lobate in rosetta basale. Pannocchie fiorali altissime. Frutto noce trigona alata.",
+                drug_active: "Rizoma contiene antrachinoni (reina) e tannini. Lassativo/purgante (antrachinoni) o astringente a basse dosi (tannini)."
+            },
+            {
+                id: 18,
+                scientific: "Hypericum perforatum",
+                common: "Iperico",
+                family: "Clusiaceae",
+                order: "Theales",
+                desc: "Fiori gialli. Foglie con tasche secretorie ('buchi') controluce.",
+                characteristics: "Erba con fusto diritto. Foglie ovali con punti traslucidi (tasche escretrici) e 'globuli neri' sui margini. Fiori gialli a 5 petali.",
+                drug_active: "Droga: sommità fiorite. Contiene olio essenziale, naftadiantroni (ipericina - nel pigmento rosso), flavonoidi. Antidepressivo e cicatrizzante (olio di iperico)."
+            },
+            {
+                id: 19,
+                scientific: "Malva sylvestris",
+                common: "Malva",
+                family: "Malvaceae",
+                order: "Malvales",
+                desc: "Fiori viola-rosati. Ricca di mucillagini emollienti.",
+                characteristics: "Erbacea con foglie palmato-lobate. Fiori viola-rosati all'ascella delle foglie.",
+                drug_active: "Droga: foglie e fiori. Ricchi di mucillagini. Proprietà emollienti e bechiche (calmanti della tosse)."
+            },
+            {
+                id: 20,
+                scientific: "Althaea officinalis",
+                common: "Altea",
+                family: "Malvaceae",
+                order: "Malvales",
+                desc: "Foglie vellutate grigio-verdi. Radice emolliente.",
+                characteristics: "Erba alta fino a 1,20m. Foglie e fusto coperti di peli densi (vellutati). Fiori bianco-rosati.",
+                drug_active: "Droga: radici e foglie. Ricca di mucillagini. Emolliente, per disturbi digestivi, tosse, affezioni dermatologiche e del cavo orale."
+            },
+            {
+                id: 21,
+                scientific: "Brassica nigra",
+                common: "Senape nera",
+                family: "Brassicaceae",
+                order: "Capparales",
+                desc: "Semi scuri piccanti. Contiene sinigroside.",
+                characteristics: "Annuale alta 1-1,5m. Fiori gialli in racemi.",
+                drug_active: "Droga: semi ovoidali. Contengono mucillagini e sinigroside (eteroside solforato). L'enzima mirosina libera isotiocianato di allile (lacrimogeno, rubefacente, vescicante)."
+            },
+            {
+                id: 22,
+                scientific: "Sinapis alba",
+                common: "Senape bianca",
+                family: "Brassicaceae",
+                order: "Capparales",
+                desc: "Fiori gialli. Semi chiari. Non volatile come la nera.",
+                characteristics: "Annuale 30-80cm, peli radi. Fiori gialli odorosi. Foglie divise.",
+                drug_active: "Semi contengono sinalboside. Per idrolisi libera isotiocianato di paraidrossibenzile (poco volatile, non lacrimogeno)."
+            },
+            {
+                id: 23,
+                scientific: "Cassia angustifolia",
+                common: "Senna",
+                family: "Fabaceae",
+                order: "Fabales",
+                desc: "Foglioline lanceolate asimmetriche. Legume appiattito.",
+                characteristics: "Suffrutice 40-60cm. Foglie paripennate con foglioline asimmetriche alla base. Fiori gialli. Frutto legume appiattito.",
+                drug_active: "Droga: foglioline e frutti. Principi attivi: sennosidi (A e B), eterosidi antracenici. Potente lassativo/purgante."
+            },
+            {
+                id: 24,
+                scientific: "Glycyrrhiza glabra",
+                common: "Liquirizia",
+                family: "Fabaceae",
+                order: "Fabales",
+                desc: "Radici e stoloni dolci. Legume glabro.",
+                characteristics: "Erbacea perenne con radici e stoloni sotterranei molto sviluppati. Foglie imparipennate. Fiori in racemi.",
+                drug_active: "Droga: radici e stoloni. Contiene glicirrizina (saponoside triterpenico, 3-5%), flavonoidi. Antitussivo, antiulcera, antivirale, edulcorante."
+            },
+            {
+                id: 25,
+                scientific: "Eucalyptus globulus",
+                common: "Eucalipto",
+                family: "Myrtaceae",
+                order: "Myrtales",
+                desc: "Foglie falciformi negli adulti. Odore balsamico forte.",
+                characteristics: "Grande albero. Dimorfismo fogliare: giovani opposte e cerose; adulte alterne e falciformi. Fiori a forma di urna legnosa con opercolo.",
+                drug_active: "Droga: foglie rami adulti. Olio essenziale ricco di cineolo (eucaliptolo, 70-80%). Antisettico, espettorante, mucolitico, balsamico."
+            },
+            {
+                id: 26,
+                scientific: "Syzygium aromaticum",
+                common: "Chiodi di garofano",
+                family: "Myrtaceae",
+                order: "Myrtales",
+                desc: "Bottoni fiorali essiccati ricchi di olio essenziale.",
+                characteristics: "Albero 10-12m sempreverde. Fiori in cime compatte. Boccioli diventano rossi.",
+                drug_active: "Droga: bottoni fiorali (chiodi di garofano). Olio essenziale ricco di eugenolo. Antalgico (mal di denti), disinfettante, antiaggregante piastrinico."
+            },
+            {
+                id: 27,
+                scientific: "Ricinus communis",
+                common: "Ricino",
+                family: "Euphorbiaceae",
+                order: "Euphorbiales",
+                desc: "Foglie grandi palmate. Semi marmorizzati. Olio purgante.",
+                characteristics: "Annuale o perenne. Foglie palmato-partite grandi. Frutto capsula spinosa. Semi marmorizzati con caruncola.",
+                drug_active: "Droga: semi. Olio di ricino (trigliceridi acido ricinoleico) è purgante drastico. Contiene ricina (proteina tossica) e ricinina (alcaloide)."
+            },
+            {
+                id: 28,
+                scientific: "Rhamnus purshiana",
+                common: "Cascara",
+                family: "Rhamnaceae",
+                order: "Rosales",
+                desc: "Corteccia usata come lassativo. Nord America.",
+                characteristics: "Albero 6-12m. Foglie alterne ovali. Frutto drupa nera.",
+                drug_active: "Droga: corteccia. Contiene eterosidi idrossiantracenici (cascarosidi A,B,C,D). Lassativo."
+            },
+            {
+                id: 29,
+                scientific: "Frangula alnus",
+                common: "Frangola",
+                family: "Rhamnaceae",
+                order: "Rosales",
+                desc: "Piccolo albero. Corteccia lassativa. Drupa rossa poi nera.",
+                characteristics: "Arbusto 4-5m. Foglie alterne intere. Frutto drupa rossa poi nera.",
+                drug_active: "Droga: corteccia (raccolta alla fioritura). Principi attivi: derivati antracenici (frangulosidi, glucofrangulosidi). Lassativo."
+            },
+            {
+                id: 30,
+                scientific: "Erythroxylum coca",
+                common: "Coca",
+                family: "Erythroxylaceae",
+                order: "Euphorbiales",
+                desc: "Foglie con due linee curve parallele alla nervatura.",
+                characteristics: "Albero 1-3m. Foglie ovali con due caratteristiche linee curve parallele alla nervatura centrale nella pagina inferiore.",
+                drug_active: "Droga: foglie. Contengono alcaloidi tropanici (cocaina). Anestetico locale e simpaticomimetico (stimolante centrale, euforizzante, vasocostrittore)."
+            },
+            {
+                id: 31,
+                scientific: "Panax ginseng",
+                common: "Ginseng",
+                family: "Araliaceae",
+                order: "Apiales",
+                desc: "Radice antropomorfa. Foglie palmate a 5.",
+                characteristics: "Erbacea perenne con radici tuberizzate. Foglie palmato-lobate a 5 foglioline. Bacca rossa.",
+                drug_active: "Droga: radice. Contiene saponosidi (ginsenosidi), polisaccaridi, vitamine. Adattogeno: stimola resistenza a stress e fatica, migliora memoria."
+            },
+            {
+                id: 32,
+                scientific: "Foeniculum vulgare",
+                common: "Finocchio",
+                family: "Apiaceae",
+                order: "Apiales",
+                desc: "Foglie filiformi. Odore anice. Frutti diacheni.",
+                characteristics: "Erba alta fino a 2m. Foglie divise in lacinie filiformi con guaine. Ombrelle di fiori gialli.",
+                drug_active: "Droga: acheni (frutti). Olio essenziale con anetolo, fencone, estragolo. Galattogeno, stomachico, carminativo (gonfiore, gas)."
+            },
+            {
+                id: 33,
+                scientific: "Pimpinella anisum",
+                common: "Anice verde",
+                family: "Apiaceae",
+                order: "Apiales",
+                desc: "Fiori bianchi. Frutti ovoidi pelosi. Sapore di anice.",
+                characteristics: "Annuale. Foglie basali cordiformi, apicali laciniate. Frutti diacheni ovoidi-piriformi pelosi.",
+                drug_active: "Droga: frutti. Olio essenziale (anetolo, estragolo). Stomachico, carminativo, antispasmodico, galattagogo."
+            },
+            {
+                id: 34,
+                scientific: "Gentiana lutea",
+                common: "Genziana",
+                family: "Gentianaceae",
+                order: "Gentianales",
+                desc: "Fiori gialli a stella verticillati. Radice amara.",
+                characteristics: "Perenne, fusto eretto. Foglie opposte grandi, nervature longitudinali. Fiori giallo-oro in fascetti ascellari.",
+                drug_active: "Droga: radici. Contiene seco-iridoidi amarissimi (gentiopicroside, amarogenzioside) e xantoni (colore giallo). Amaro-tonico, eupeptico, stimola l'appetito."
+            },
+            {
+                id: 35,
+                scientific: "Strophanthus gratus",
+                common: "Strofanto",
+                family: "Apocynaceae",
+                order: "Gentianales",
+                desc: "Semi con ciuffetto di peli. Cardiotonico.",
+                characteristics: "Legnosa/rampicante. Frutto: due follicoli divergenti con semi sormontati da ciuffo di peli (ventaglietto).",
+                drug_active: "Droga: semi (privati del ciuffo). Contengono eterosidi cardiotonici: ouabaina (G-strofantina). Cardiotonico d'urgenza."
+            },
+            {
+                id: 36,
+                scientific: "Rauwolfia serpentina",
+                common: "Rauwolfia",
+                family: "Apocynaceae",
+                order: "Gentianales",
+                desc: "Radici tortuose. Usata per ipertensione.",
+                characteristics: "Arbusto sempreverde con grossa radice fittonante e radici tortuose. Foglie verticillate a 3-5.",
+                drug_active: "Droga: radici. Alcaloidi: reserpina, ajmalicina. Reserpina usata come ipotensivo e sedativo. Ajmalicina spasmolitico."
+            },
+            {
+                id: 37,
+                scientific: "Catharanthus roseus",
+                common: "Pervinca del Madagascar",
+                family: "Apocynaceae",
+                order: "Gentianales",
+                desc: "Fiore rosa simile alla pervinca. Antitumorale.",
+                characteristics: "Piccolo suffrutice. Foglie opposte lucide. Fiore rosa simile alla pervinca.",
+                drug_active: "Contiene alcaloidi indolici: vincristina e vinblastina. Antimitotici (bloccano fuso mitotico), usati come antitumorali."
+            },
+            {
+                id: 38,
+                scientific: "Atropa belladonna",
+                common: "Belladonna",
+                family: "Solanaceae",
+                order: "Solanales",
+                desc: "Bacche nere lucide col calice a stella. Fiori violacei.",
+                characteristics: "Erbacea perenne robusta. Fiori campanulati violaceo cupo. Frutti: bacche nere lucide con calice aperto a stella.",
+                drug_active: "Droga: foglie e radici. Alcaloidi tropanici: atropina, scopolamina, iosciamina. Parasimpatolitico (anticolinergico). Usata per spasmi, dolori, infiammazioni."
+            },
+            {
+                id: 39,
+                scientific: "Hyoscyamus niger",
+                common: "Giusquiamo",
+                family: "Solanaceae",
+                order: "Solanales",
+                desc: "Corolla giallastra reticolata di viola. Fetida.",
+                characteristics: "Erbacea peloso-vischiosa, fetida. Corolla imbutiforme giallastra reticolata di viola. Frutto pisside.",
+                drug_active: "Droga: foglie. Alcaloidi: scopolamina (prevalente), atropina. Sedativo, ipnotico, sistema nervoso centrale (scopolamina)."
+            },
+            {
+                id: 40,
+                scientific: "Datura stramonium",
+                common: "Stramonio",
+                family: "Solanaceae",
+                order: "Solanales",
+                desc: "Fiori bianchi a tromba. Capsula spinosa. Fetida.",
+                characteristics: "Annuale robusta. Grandi fiori bianchi a tromba. Frutto capsula spinosa che si apre in 4 valve.",
+                drug_active: "Droga: foglie. Alcaloidi come belladonna (atropina, scopolamina). Azione simile."
+            },
+            {
+                id: 41,
+                scientific: "Lavandula angustifolia",
+                common: "Lavanda",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Fiori in spighe blu-violette. Profumo caratteristico.",
+                characteristics: "Frutice odoroso. Foglie strette lanceolate. Fiori in spicastri blu-violetti. Calice grigio-bluastro.",
+                drug_active: "Droga: sommità fiorite. Olio essenziale (linalolo, acetato di linalile). Antibatterico, sedativo leggero (stati neurotonici, sonno)."
+            },
+            {
+                id: 42,
+                scientific: "Mentha x piperita",
+                common: "Menta",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Fusto quadrangolare rossastro. Forte odore mentolato.",
+                characteristics: "Ibrido con stoloni. Fusti quadrangolari rossastri. Foglie opposte seghettate. Odore mentolato.",
+                drug_active: "Droga: foglie. Olio essenziale ricco di mentolo e mentone. Digestivo, carminativo. Mentolo è decongestionante e antipruriginoso."
+            },
+            {
+                id: 43,
+                scientific: "Melissa officinalis",
+                common: "Melissa",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Odore di limone. Foglie rugose.",
+                characteristics: "Erbacea perenne. Foglie opposte rugose, odore di limone. Fiori bianchi verticillastri.",
+                drug_active: "Droga: foglie. Olio essenziale (citrale, citronellale), acido rosmarinico. Antibatterico, antispasmodico, sedativo."
+            },
+            {
+                id: 44,
+                scientific: "Salvia officinalis",
+                common: "Salvia",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Foglie rugose grigio-verdi. Odore aromatico.",
+                characteristics: "Suffrutice. Foglie grigio-verdi (pelose) rugose. Fiori blu-violacei. Odore aromatico amaro.",
+                drug_active: "Droga: foglie. Olio essenziale (tujone, cineolo, canfora), diterpeni, acido rosmarinico. Spasmolitico, antiossidante, antisudorifero."
+            },
+            {
+                id: 45,
+                scientific: "Rosmarinus officinalis",
+                common: "Rosmarino",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Foglie aghiiformi, pagina inferiore bianca.",
+                characteristics: "Arbusto sempreverde. Foglie coriacee, verde scuro sopra, bianche tomentose sotto. Fiori azzurri.",
+                drug_active: "Droga: foglie e sommità fiorite. Olio essenziale (canfora, cineolo, pinene). Spasmolitico, digestivo, epatoprotettore."
+            },
+            {
+                id: 46,
+                scientific: "Thymus vulgaris",
+                common: "Timo",
+                family: "Lamiaceae",
+                order: "Lamiales",
+                desc: "Piccolo arbusto aromatico. Foglie piccolissime.",
+                characteristics: "Piccolo arbusto legnoso. Foglie piccolissime lanceolate. Fiori rosei/bianchi. Odore forte.",
+                drug_active: "Droga: sommità fiorite. Olio essenziale (timolo, carvacrolo). Antibatterico, antifungino, antispasmodico, bechico."
+            },
+            {
+                id: 47,
+                scientific: "Plantago afra",
+                common: "Psillio",
+                family: "Plantaginaceae",
+                order: "Plantaginales",
+                desc: "Semi usati come lassativo meccanico (mucillagini).",
+                characteristics: "Annuale. Infiorescenze a spighe. Frutto capsula con 2 semi ovoidi appiattiti.",
+                drug_active: "Droga: semi. Contengono mucillagini (xilosio, arabinosio). Lassativo meccanico (rigonfiano in acqua). Modesto ipocolesterolemizzante."
+            },
+            {
+                id: 48,
+                scientific: "Digitalis purpurea",
+                common: "Digitale",
+                family: "Scrophulariaceae",
+                order: "Lamiales",
+                desc: "Fiori a ditale porpora maculati. Foglie vellutate.",
+                characteristics: "Bienne. Rosetta basale primo anno, fusto eretto 1,5m secondo anno. Foglie vellutate. Fiori penduli a ditale porpora maculati.",
+                drug_active: "Droga: foglie. Eterosidi cardiotonici (cardenolidi): digitossina. Usata per estrazione industriale di digitossina (cardiotonico)."
+            },
+            {
+                id: 49,
+                scientific: "Cinchona succirubra",
+                common: "China",
+                family: "Rubiaceae",
+                order: "Rubiales",
+                desc: "Corteccia rossa. Antimalarico e amaro.",
+                characteristics: "Albero 15-20m. Foglie opposte, nervatura rossastra. Fiori bianchi/rosa. Capsula color ruggine.",
+                drug_active: "Droga: corteccia rossa. Alcaloidi chinolinici: chinina, chinidina. Chinina è antimalarico e antipiretico. Chinidina è antifibrillante cardiaco."
+            },
+            {
+                id: 50,
+                scientific: "Cephaelis ipecacuanha",
+                common: "Ipecacuana",
+                family: "Rubiaceae",
+                order: "Rubiales",
+                desc: "Radice inanellata. Emetico ed espettorante.",
+                characteristics: "Arbusto piccolo. Radici anellate. Foglie opposte.",
+                drug_active: "Droga: radici. Alcaloidi: emetina, cefelina. Espettorante a basse dosi, emetico (vomitivo) a dosi maggiori. Amebicida."
+            },
+            {
+                id: 51,
+                scientific: "Valeriana officinalis",
+                common: "Valeriana",
+                family: "Valerianaceae",
+                order: "Dipsacales",
+                desc: "Rizoma odore sgradevole. Fiori rosa/bianchi.",
+                characteristics: "Erbacea perenne. Fusto cavo. Foglie imparipennate. Fiori in corimbi rosa/bianchi. Rizoma odore sgradevole.",
+                drug_active: "Droga: rizoma. Iridoidi (valepotriati), olio essenziale (acidi valerianici), sesquiterpeni. Tranquillizzante, sedativo, per insonnia e ansia."
+            },
+            {
+                id: 52,
+                scientific: "Matricaria chamomilla",
+                common: "Camomilla",
+                family: "Asteraceae",
+                order: "Asterales",
+                desc: "Capolini con ricettacolo conico cavo. Fiori bianchi.",
+                characteristics: "Annuale aromatica. Foglie bipennatosette. Capolini con fiori ligulati bianchi e tubulosi gialli. Ricettacolo conico cavo.",
+                drug_active: "Droga: capolini. Olio essenziale (camazulene - blu, bisabololo), flavonoidi, cumarine. Antinfiammatorio, spasmolitico, sedativo blando."
+            },
+            {
+                id: 53,
+                scientific: "Anthemis nobilis",
+                common: "Camomilla romana",
+                family: "Asteraceae",
+                order: "Asterales",
+                desc: "Ricettacolo pieno con pagliette. Più aromatica.",
+                characteristics: "Perenne, aromatica. Foglie bipennatosette. Differisce dalla Matricaria per il ricettacolo pieno con pagliette tra i fiori.",
+                drug_active: "Droga: capolini. Lattoni sesquiterpenici (amari), olio essenziale (esteri). Antinfiammatorio, digestivo."
+            },
+            {
+                id: 54,
+                scientific: "Artemisia annua",
+                common: "Artemisia",
+                family: "Asteraceae",
+                order: "Asterales",
+                desc: "Molto profumata. Antimalarico.",
+                characteristics: "Annuale molto profumata. Capolini globosi in pannocchie. Foglie palmatosette.",
+                drug_active: "Droga: fusti e foglie. Lattoni sesquiterpenici: artemisina. Potente antimalarico."
+            },
+            {
+                id: 55,
+                scientific: "Silybum marianum",
+                common: "Cardo mariano",
+                family: "Asteraceae",
+                order: "Asterales",
+                desc: "Foglie venate di bianco con spine. Fiori porpora.",
+                characteristics: "Bienne. Foglie venate di bianco con spine gialle. Capolini grandi con fiori porpora. Frutti cipsele.",
+                drug_active: "Droga: frutti (cipsele). Flavonolignani (silimarina: silibina, etc.). Epatoprotettore (protegge fegato da tossine), rigenerante epatico."
+            },
+            {
+                id: 56,
+                scientific: "Colchicum autumnale",
+                common: "Colchico",
+                family: "Liliaceae",
+                order: "Liliales",
+                desc: "Fiori rosa in autunno senza foglie. Bulbo tossico.",
+                characteristics: "Erbacea con bulbo-tubero. Fiori rosa in autunno (senza foglie). Foglie e frutti in primavera.",
+                drug_active: "Droga: semi e bulbo. Alcaloidi: colchicina. Antimitotico (blocca mitosi in metafase). Usato per gotta e come antitumorale."
+            },
+            {
+                id: 57,
+                scientific: "Urginea maritima",
+                common: "Scilla",
+                family: "Liliaceae",
+                order: "Liliales",
+                desc: "Bulbo enorme. Cardiotonico.",
+                characteristics: "Bulbo enorme globoso. Foglie lanceolate. Scapo fiorale alto a fine estate. Fiori bianco-verdastri.",
+                drug_active: "Droga: squame interne del bulbo. Bufadienolidi (glucoscillarene A, proscillaridina A). Cardiotonico attivo per via orale."
+            },
+            {
+                id: 58,
+                scientific: "Allium sativum",
+                common: "Aglio",
+                family: "Amaryllidaceae",
+                order: "Liliales",
+                desc: "Bulbo composto da spicchi. Odore solforato.",
+                characteristics: "Erbacea con bulbo composto da spicchi (bulbilli). Fiori bianchi/rosati misti a bulbilli, sterili.",
+                drug_active: "Droga: bulbo. Composti solforati (alliina -> allicina). Antibatterico, antifungino, antiaggregante, ipotensivo, ipolipemizzante."
+            },
+            {
+                id: 59,
+                scientific: "Aloe barbadensis",
+                common: "Aloe vera",
+                family: "Aloeaceae",
+                order: "Liliales",
+                desc: "Foglie succulente a rosetta con spine ai margini.",
+                characteristics: "Pianta succulenta a rosetta. Foglie lanceolate con spine ai margini. Fiore giallo/rosso a racemo.",
+                drug_active: "Droga: succo (aloina - lassativo) e gel (mucillagini - cicatrizzante, emolliente)."
+            }
         ];
 
         const app = {
@@ -321,10 +917,7 @@
                 document.getElementById('fc-total-count').innerText = this.data.length;
             },
 
-            // NUOVA FUNZIONE PER IMMAGINI REALI
             getImageUrl(plant) {
-                // Utilizza un proxy affidabile per ottenere miniature reali da Bing Images basate sul nome
-                // Questo aggira il problema dei generatori AI che a volte falliscono
                 const query = encodeURIComponent(plant.scientific + " botanical plant");
                 return `https://tse2.mm.bing.net/th?q=${query}&w=500&h=400&c=7&rs=1&p=0`;
             },
@@ -339,7 +932,6 @@
                 document.getElementById(`view-${newMode}`).classList.remove('hidden');
                 document.getElementById(`view-${newMode}`).classList.add('block');
 
-                // Update Nav Visuals
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     btn.classList.remove('bg-white', 'text-emerald-900', 'shadow-sm');
                     btn.classList.add('text-emerald-100');
@@ -380,11 +972,14 @@
                             </div>
                             
                             <div class="space-y-3 text-sm text-gray-600 flex-1">
-                                <p class="leading-relaxed">${plant.desc}</p>
+                                <p class="leading-relaxed line-clamp-3">${plant.desc}</p>
                             </div>
                             
-                            <div class="mt-4 pt-4 border-t border-gray-100">
-                                <p class="text-xs text-gray-500"><strong class="text-emerald-700">Attivo:</strong> ${plant.active}</p>
+                            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                <span class="text-xs text-gray-400 font-mono">${plant.order}</span>
+                                <button onclick="app.openDetails(${plant.id})" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                                    <i data-lucide="info" class="w-4 h-4"></i> Dettagli
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -402,12 +997,47 @@
                 this.renderList(filtered);
             },
 
+            // --- DETAILS MODAL ---
+            openDetails(id) {
+                const plant = this.data.find(p => p.id === id);
+                if (!plant) return;
+
+                document.getElementById('modal-img').src = this.getImageUrl(plant);
+                document.getElementById('modal-common').innerText = plant.common;
+                document.getElementById('modal-scientific').innerText = plant.scientific;
+                document.getElementById('modal-family').innerText = plant.family;
+                document.getElementById('modal-order').innerText = plant.order || '-';
+                
+                // Fallback se le caratteristiche sono vuote (usiamo la desc breve)
+                document.getElementById('modal-chars').innerText = plant.characteristics || plant.desc;
+                document.getElementById('modal-drug').innerText = plant.drug_active || "Dati non disponibili.";
+
+                const modal = document.getElementById('details-modal');
+                modal.classList.remove('hidden');
+                // Piccola animazione di entrata
+                setTimeout(() => {
+                    modal.querySelector('div.bg-white').classList.add('modal-enter-active');
+                }, 10);
+                
+                // Prevent scrolling background
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeDetails() {
+                const modal = document.getElementById('details-modal');
+                modal.querySelector('div.bg-white').classList.remove('modal-enter-active');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }, 200);
+            },
+
             // --- FLASHCARD LOGIC ---
             loadFlashcard() {
                 const plant = this.data[this.currentCardIndex];
                 const cardInner = document.getElementById('flashcard-inner');
                 
-                // Animazione reset
                 cardInner.style.transition = 'none';
                 cardInner.classList.remove('flipped');
                 this.isFlipped = false;
@@ -421,7 +1051,7 @@
                     document.getElementById('fc-sci-name').innerText = plant.scientific;
                     document.getElementById('fc-common-name').innerText = plant.common;
                     document.getElementById('fc-family').innerText = plant.family;
-                    document.getElementById('fc-desc').innerText = plant.desc;
+                    document.getElementById('fc-desc').innerText = plant.characteristics || plant.desc; // Usa la descrizione lunga
                 }, 50);
             },
 
@@ -449,11 +1079,9 @@
             },
 
             loadQuizQuestion() {
-                // Selezione random
                 const correctIndex = Math.floor(Math.random() * this.data.length);
                 const correctPlant = this.data[correctIndex];
                 
-                // Generazione distrattori
                 const options = [correctPlant];
                 while(options.length < 4) {
                     const randomPlant = this.data[Math.floor(Math.random() * this.data.length)];
@@ -462,21 +1090,19 @@
                     }
                 }
                 
-                // Shuffle
                 this.quizOptions = options.sort(() => Math.random() - 0.5);
                 this.correctAnswerId = correctPlant.id;
                 this.quizAnswered = false;
 
-                // UI setup
                 document.getElementById('quiz-image').src = this.getImageUrl(correctPlant);
-                document.getElementById('quiz-hint').innerText = correctPlant.desc;
+                // Use short desc for quiz to make it easier/readable
+                document.getElementById('quiz-hint').innerText = correctPlant.desc; 
                 
                 const nextBtn = document.getElementById('quiz-next-btn');
                 nextBtn.disabled = true;
                 nextBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-400');
                 nextBtn.classList.remove('bg-emerald-600', 'text-white', 'shadow-lg');
 
-                // Render buttons
                 const optionsContainer = document.getElementById('quiz-options');
                 optionsContainer.innerHTML = this.quizOptions.map(opt => `
                     <button onclick="app.checkQuizAnswer(${opt.id}, this)" 
@@ -497,17 +1123,14 @@
                 const allBtns = document.querySelectorAll('.quiz-btn');
                 
                 if (selectedId === this.correctAnswerId) {
-                    // Correct
                     this.quizScore++;
                     document.getElementById('quiz-score').innerText = this.quizScore;
                     btnElement.classList.add('correct');
                     btnElement.querySelector('.result-icon').innerHTML = '<i data-lucide="check-circle" class="text-emerald-600 w-6 h-6"></i>';
                 } else {
-                    // Wrong
                     btnElement.classList.add('wrong');
                     btnElement.querySelector('.result-icon').innerHTML = '<i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i>';
                     
-                    // Show correct
                     allBtns.forEach(btn => {
                         if (btn.innerText.includes(this.data.find(p => p.id === this.correctAnswerId).scientific)) {
                             btn.classList.add('correct');
@@ -516,7 +1139,6 @@
                     });
                 }
 
-                // Enable Next
                 const nextBtn = document.getElementById('quiz-next-btn');
                 nextBtn.disabled = false;
                 nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-400');
@@ -534,7 +1156,6 @@
             }
         };
 
-        // Init App
         document.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
@@ -542,4 +1163,3 @@
     </script>
 </body>
 </html>
-
