@@ -329,84 +329,121 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script>
+<script>
         // --- SUPABASE AYARLARI ---
+        // Edge Function kullanacağımız için bu URL ve Key ile fonksiyonu çağıracağız.
         const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Veritabanı boş başlıyor, Supabase'den dolacak
         let plantDatabase = [];
 
         const app = {
-            data: [], // Başlangıçta boş
+            data: [], 
             mode: 'list',
             currentCardIndex: 0,
             isFlipped: false,
             quizScore: 0,
             quizAnswered: false,
 
-            // Başlatma fonksiyonunu değiştirdik
             async init() {
-                // Enter tuşu dinleyicisi ekle
+                // Enter tuşu desteği
                 document.getElementById('access-code').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
-                        e.preventDefault(); // Form submit'i engelle (eğer form içindeyse)
-                        verifyCode();
+                        e.preventDefault(); 
+                        app.manualLogin(); // verifyCode yerine manualLogin kullanıyoruz
                     }
                 });
 
-                // Önce lisans kontrolü yap
-                await this.checkLicense();
-            },
-
-            // --- LİSANS VE VERİ ÇEKME İŞLEMLERİ ---
-            async checkLicense() {
+                // Sayfa açılınca kayıtlı lisansı kontrol et
                 const savedCode = localStorage.getItem('botanical_license');
-                
                 if (savedCode) {
-                    // Eğer tarayıcıda kod varsa direkt veriyi çekmeye çalış
+                    // Kayıtlı kod varsa otomatik giriş dene
                     document.getElementById('login-overlay').style.display = 'none';
-                    this.loadDataFromSupabase();
+                    await this.fetchSecureData(savedCode);
                 } else {
-                    // Kod yoksa giriş ekranı kalsın
-                    lucide.createIcons(); // İkonları giriş ekranı için yükle
+                    lucide.createIcons();
                 }
             },
 
-            async loadDataFromSupabase() {
-                // Yükleme ekranını göster
+            // --- GÜVENLİ VERİ ÇEKME FONKSİYONU (SERVER-SIDE) ---
+            async fetchSecureData(code) {
                 const loadingScreen = document.getElementById('loading-screen');
+                const errorMsg = document.getElementById('login-error');
+                const loginBtn = document.getElementById('login-btn');
+                
+                // Yükleniyor ekranını aç
                 loadingScreen.style.display = 'flex';
                 loadingScreen.classList.remove('hidden');
-
-                // Supabase'den veriyi çek
-                let { data: plants, error } = await supabase
-                    .from('plants')
-                    .select('*')
-                    .order('id', { ascending: true });
-
-                if (error) {
-                    console.error('Errore durante il caricamento:', error);
-                    alert("Impossibile caricare i dati. Aggiorna la pagina.");
-                    return;
+                
+                if(loginBtn) {
+                    loginBtn.disabled = true;
+                    loginBtn.innerText = "Verifica in corso...";
                 }
 
-                // Veriyi uygulamaya yükle
-                this.data = plants;
-                plantDatabase = plants; // Global değişkeni de güncelle (uyumluluk için)
-                
-                // Yükleme ekranını kapat
-                loadingScreen.style.display = 'none';
+                try {
+                    // SERVER FUNCTION ÇAĞRISI
+                    // Veritabanına değil, "get-plants" fonksiyonuna gidiyoruz
+                    const { data, error } = await supabase.functions.invoke('get-plants', {
+                        body: { licenseCode: code }
+                    });
 
-                // Uygulamayı normal şekilde başlat
-                this.renderList();
-                this.updateNav();
-                lucide.createIcons();
-                document.getElementById('fc-total-count').innerText = this.data.length;
+                    if (error) throw new Error("Errore di connessione al server."); // Bağlantı hatası
+                    if (data.error) throw new Error(data.error); // Fonksiyon içinden gelen hata (kod yanlış vb.)
+
+                    // BAŞARILI!
+                    this.data = data.plants; 
+                    plantDatabase = data.plants; 
+
+                    // Lisansı tarayıcıya kaydet
+                    localStorage.setItem('botanical_license', code);
+
+                    // Ekranları ayarla
+                    loadingScreen.style.display = 'none';
+                    const overlay = document.getElementById('login-overlay');
+                    if(overlay) overlay.style.display = 'none';
+
+                    // Uygulamayı başlat
+                    this.renderList();
+                    this.updateNav();
+                    lucide.createIcons();
+                    document.getElementById('fc-total-count').innerText = this.data.length;
+
+                } catch (err) {
+                    console.error(err);
+                    loadingScreen.style.display = 'none';
+                    
+                    // Hata mesajını İtalyanca göster
+                    let message = "Errore sconosciuto.";
+                    if(err.message.includes("Geçersiz") || err.message.includes("valid")) message = "Codice non valido.";
+                    else if(err.message.includes("kullanılmış") || err.message.includes("used")) message = "Questo codice è già stato utilizzato.";
+                    else message = err.message;
+
+                    if(errorMsg) errorMsg.innerText = message;
+                    
+                    if(loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.innerText = "Accedi";
+                    }
+                    
+                    // Hata varsa localstorage'ı temizle ki sonsuz döngü olmasın
+                    localStorage.removeItem('botanical_license');
+                    document.getElementById('login-overlay').style.display = 'flex';
+                }
             },
 
-            // --- DİĞER FONKSİYONLAR (Aynen kalıyor, sadece getImageUrl güncellendi) ---
+            // Kullanıcı butona basınca bu çalışır
+            async manualLogin() {
+                const input = document.getElementById('access-code');
+                const code = input.value.trim().toUpperCase();
+                if(!code) {
+                    document.getElementById('login-error').innerText = "Inserisci un codice.";
+                    return;
+                }
+                await this.fetchSecureData(code);
+            },
+
+            // --- UI FONKSİYONLARI (Aynen korundu) ---
             getImageUrl(plant) {
                 const query = encodeURIComponent(plant.scientific + " botanical plant");
                 return `https://tse2.mm.bing.net/th?q=${query}&w=500&h=400&c=7&rs=1&p=0`;
@@ -623,63 +660,9 @@
             }
         };
 
-        // --- GLOBAL: KOD DOĞRULAMA FONKSİYONU ---
-        async function verifyCode() {
-            const btn = document.getElementById('login-btn');
-            const errorMsg = document.getElementById('login-error');
-            const input = document.getElementById('access-code');
-            const code = input.value.trim().toUpperCase();
-
-            if (!code) {
-                errorMsg.innerText = "Inserisci un codice."; // İtalyanca Hata
-                return;
-            }
-
-            // Butonu kilitle
-            btn.disabled = true;
-            btn.innerText = "Verifica in corso..."; // Kontrol ediliyor
-            errorMsg.innerText = "";
-
-            try {
-                // 1. Kodu kontrol et (Kullanılmamış olmalı)
-                const { data, error } = await supabase
-                    .from('codes')
-                    .select('*')
-                    .eq('code', code)
-                    .single();
-
-                if (error || !data) {
-                    throw new Error("Codice non valido."); // Geçersiz Kod
-                }
-
-                if (data.is_used) {
-                    throw new Error("Questo codice è già stato utilizzato su un altro dispositivo."); // Kod kullanılmış
-                }
-
-                // 2. Kodu "Kullanıldı" olarak işaretle (YAKMA İŞLEMİ)
-                const { error: updateError } = await supabase
-                    .from('codes')
-                    .update({ is_used: true })
-                    .eq('id', data.id);
-
-                if (updateError) throw new Error("Errore di attivazione."); // Aktivasyon hatası
-
-                // 3. Başarılı!
-                localStorage.setItem('botanical_license', code);
-                
-                // Animasyonla giriş yap
-                const overlay = document.getElementById('login-overlay');
-                overlay.classList.add('opacity-0', 'scale-110');
-                setTimeout(() => {
-                    overlay.style.display = 'none';
-                    app.loadDataFromSupabase(); // Verileri çekmeye başla
-                }, 500);
-
-            } catch (err) {
-                errorMsg.innerText = err.message;
-                btn.disabled = false;
-                btn.innerText = "Accedi"; // Giriş Yap
-            }
+        // --- GLOBAL: BUTON FONKSİYONU ---
+        function verifyCode() {
+            app.manualLogin();
         }
 
         // Uygulamayı Başlat
@@ -697,7 +680,7 @@
                     .catch(err => console.log('Errore Service Worker:', err));
             });
         }
-    </script>    
+    </script>
     
 </body>
 </html>
