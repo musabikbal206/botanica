@@ -18,22 +18,18 @@
         body { font-family: 'Lato', sans-serif; background-color: #f3fcf6; }
         h1, h2, h3, .scientific-name { font-family: 'Playfair Display', serif; }
         
-        /* Kart Efektleri */
         .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
         .card-shadow:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         
-        /* Flashcard Animasyonları */
         .perspective-1000 { perspective: 1000px; }
         .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s; transform-style: preserve-3d; }
         .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 1rem; overflow: hidden; }
         .flip-card-back { transform: rotateY(180deg); background: linear-gradient(135deg, #065f46 0%, #047857 100%); }
         
-        /* Quiz Renkleri */
         .quiz-btn.correct { background-color: #d1fae5; border-color: #10b981; color: #065f46; }
         .quiz-btn.wrong { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.7; }
         
-        /* Kaydırma Çubuğu */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
@@ -59,11 +55,6 @@
         </div>
     </div>
 
-    <div id="loading-screen" class="fixed inset-0 z-[90] bg-white hidden flex-col justify-center items-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-600 mb-4"></div>
-        <p class="text-emerald-800 font-bold animate-pulse">Caricamento in corso...</p>
-    </div>    
-
     <header class="bg-emerald-900 text-white p-4 sticky top-0 z-40 border-b-4 border-emerald-600 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -75,7 +66,6 @@
                     <p class="text-xs text-emerald-300 font-light tracking-widest uppercase">Apprendimento Visivo</p>
                 </div>
             </div>
-            
             <nav class="flex bg-emerald-800/50 p-1 rounded-xl backdrop-blur-sm border border-emerald-700">
                 <button onclick="app.setMode('list')" id="nav-list" class="nav-btn flex items-center gap-2 px-5 py-2 rounded-lg bg-white text-emerald-900 shadow-sm transition-all font-medium text-sm">
                     <i data-lucide="book" class="w-4 h-4"></i> Studio
@@ -91,20 +81,16 @@
     </header>
 
     <main class="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8 relative">
-        
         <div id="view-list" class="view-section block animate-fade-in">
             <div class="text-center mb-10 max-w-2xl mx-auto">
                 <h2 class="text-4xl font-bold text-emerald-950 mb-3 italic">Atlante Botanico</h2>
                 <p class="text-gray-600">Esplora la collezione completa.</p>
             </div>
-            
             <div class="mb-8 relative max-w-md mx-auto">
                 <input type="text" id="search-input" onkeyup="app.filterList()" placeholder="Cerca una pianta..." class="w-full p-3 pl-10 rounded-full border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <i data-lucide="search" class="absolute left-3 top-3.5 text-gray-400 w-5 h-5"></i>
             </div>
-
-            <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                </div>
+            <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
         </div>
 
         <div id="view-flashcard" class="view-section hidden">
@@ -121,14 +107,12 @@
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
                             </div>
                             <div class="flex-1 p-6 flex flex-col items-center justify-center">
-                                <div class="bg-emerald-100 p-3 rounded-full mb-3 text-emerald-700"><i data-lucide="help-circle" class="w-8 h-8"></i></div>
                                 <h3 class="text-xl font-bold text-gray-700">Che pianta è?</h3>
                                 <p class="text-gray-400 text-sm mt-1">Clicca per scoprire</p>
                             </div>
                         </div>
                         <div class="flip-card-back flex flex-col p-8 text-white rounded-2xl shadow-inner border-4 border-emerald-700/50">
                             <div class="flex-1 flex flex-col items-center justify-center text-center overflow-hidden">
-                                <i data-lucide="flower" class="w-12 h-12 text-emerald-300 mb-4 opacity-80"></i>
                                 <h2 id="fc-sci-name" class="text-2xl md:text-3xl font-bold italic mb-2 font-serif text-white drop-shadow-md"></h2>
                                 <p id="fc-common-name" class="text-lg text-emerald-200 font-bold uppercase tracking-widest mb-6 border-b border-emerald-400/30 pb-2"></p>
                                 <div class="w-full text-left bg-white/10 p-5 rounded-xl backdrop-blur-sm space-y-3 overflow-y-auto max-h-[200px] custom-scrollbar">
@@ -140,9 +124,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
-                    <button onclick="app.prevCard()" class="p-4 rounded-full bg-white shadow-lg text-gray-600 hover:text-emerald-600 hover:scale-110 transition-all border border-gray-100"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
-                    <button onclick="app.flipCard()" class="px-8 py-3 rounded-full bg-emerald-600 shadow-lg text-white font-bold hover:bg-emerald-700 hover:shadow-emerald-500/30 transition-all flex items-center gap-2"><i data-lucide="rotate-cw" class="w-5 h-5"></i> Gira</button>
-                    <button onclick="app.nextCard()" class="p-4 rounded-full bg-white shadow-lg text-gray-600 hover:text-emerald-600 hover:scale-110 transition-all border border-gray-100"><i data-lucide="arrow-right" class="w-6 h-6"></i></button>
+                    <button onclick="app.prevCard()" class="p-4 rounded-full bg-white shadow-lg text-gray-600 hover:text-emerald-600"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
+                    <button onclick="app.flipCard()" class="px-8 py-3 rounded-full bg-emerald-600 shadow-lg text-white font-bold flex items-center gap-2"><i data-lucide="rotate-cw" class="w-5 h-5"></i> Gira</button>
+                    <button onclick="app.nextCard()" class="p-4 rounded-full bg-white shadow-lg text-gray-600 hover:text-emerald-600"><i data-lucide="arrow-right" class="w-6 h-6"></i></button>
                 </div>
             </div>
         </div>
@@ -152,20 +136,14 @@
                 <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                     <div class="bg-emerald-900 px-6 py-4 text-white flex justify-between items-center">
                         <div class="flex items-center gap-2"><i data-lucide="award" class="w-6 h-6 text-yellow-400"></i><span class="font-bold text-lg">Punti: <span id="quiz-score" class="text-yellow-400">0</span></span></div>
-                        <div class="text-emerald-200 text-sm font-medium bg-emerald-800 px-3 py-1 rounded-full">Domanda a scelta multipla</div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2">
                         <div class="h-64 md:h-auto bg-gray-100 relative group"><img id="quiz-image" src="" class="w-full h-full object-cover"></div>
                         <div class="p-6 md:p-8 flex flex-col justify-center bg-emerald-50/50">
-                            <h3 class="text-xl font-bold text-gray-800 mb-6 leading-snug">Quale pianta corrisponde a questa descrizione?</h3>
-                            <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 mb-6 relative">
-                                <i data-lucide="quote" class="absolute -top-3 -left-2 text-emerald-200 w-8 h-8 fill-current"></i>
-                                <p id="quiz-hint" class="text-gray-600 italic text-sm pl-4 relative z-10 line-clamp-4">...</p>
-                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-6 leading-snug">Quale pianta corrisponde?</h3>
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 mb-6 relative"><p id="quiz-hint" class="text-gray-600 italic text-sm pl-4 relative z-10 line-clamp-4">...</p></div>
                             <div id="quiz-options" class="space-y-3"></div>
-                            <div class="mt-6 flex justify-end">
-                                <button id="quiz-next-btn" onclick="app.nextQuizQuestion()" disabled class="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all bg-gray-200 text-gray-400 cursor-not-allowed opacity-50">Prossima <i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-                            </div>
+                            <div class="mt-6 flex justify-end"><button id="quiz-next-btn" onclick="app.nextQuizQuestion()" disabled class="flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all bg-gray-200 text-gray-400 cursor-not-allowed opacity-50">Prossima <i data-lucide="chevron-right" class="w-4 h-4"></i></button></div>
                         </div>
                     </div>
                 </div>
@@ -174,9 +152,9 @@
     </main>
 
     <div id="details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="app.closeDetails()"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="app.closeDetails()"></div>
         <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row animate-fade-in">
-            <button onclick="app.closeDetails()" class="absolute top-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all text-gray-600 hover:text-red-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <button onclick="app.closeDetails()" class="absolute top-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg text-gray-600 hover:text-red-500"><i data-lucide="x" class="w-6 h-6"></i></button>
             <div class="w-full md:w-2/5 h-64 md:h-auto bg-gray-100 relative">
                 <img id="modal-img" src="" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
@@ -203,12 +181,7 @@
         </div>
     </div>
 
-    <footer class="bg-emerald-900 text-emerald-400/60 py-8 text-center mt-12 border-t border-emerald-800">
-        <p class="text-sm">Seni Seviyorum My Everything, Ti Amo, Ti Luno ❤️</p>
-    </footer>
-
     <script>
-        // --- SUPABASE TANIMLAMASI (TEK SEFER) ---
         const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -230,25 +203,19 @@
                     });
                 }
 
-                // 1. Önce tarayıcı hafızasında veri var mı bak
                 const savedData = localStorage.getItem('botanical_data');
-                
                 if (savedData) {
                     try {
                         this.data = JSON.parse(savedData);
                         if (this.data.length > 0) {
-                            // Veri varsa giriş ekranını kapat, uygulamayı aç
                             document.getElementById('login-overlay').style.display = 'none';
                             this.launchApp();
                             return;
                         }
                     } catch (e) {
-                        console.error("Hata: Kayıtlı veri bozuk", e);
                         localStorage.removeItem('botanical_data');
                     }
                 }
-                
-                // Veri yoksa ikonları oluştur
                 lucide.createIcons();
             },
 
@@ -265,22 +232,14 @@
                 errorMsg.innerText = "";
 
                 try {
-                    // SUPABASE RPC ÇAĞRISI
                     const { data: response, error } = await supabase.rpc('verify_and_get_plants', { license_code: code });
 
                     if (error) throw error;
+                    if (response.success === false) throw new Error(response.message);
 
-                    if (response.success === false) {
-                        throw new Error(response.message);
-                    }
-
-                    // BAŞARILI!
                     this.data = response.data;
-                    
-                    // Veriyi kaydet
                     localStorage.setItem('botanical_data', JSON.stringify(this.data));
 
-                    // Ekranı Kapat ve Başlat
                     const overlay = document.getElementById('login-overlay');
                     overlay.classList.add('opacity-0');
                     setTimeout(() => {
@@ -292,10 +251,9 @@
                     console.error(err);
                     btn.disabled = false;
                     btn.innerText = "Accedi";
-                    // İtalyanca Hata Mesajları
-                    if (err.message.includes("Geçersiz") || err.message.includes("valid")) {
+                    if (err.message.includes("Geçersiz") || err.message.includes("valid") || err.message.includes("Codice non valido")) {
                         errorMsg.innerText = "Codice non valido.";
-                    } else if (err.message.includes("kullanılmış") || err.message.includes("used")) {
+                    } else if (err.message.includes("kullanılmış") || err.message.includes("used") || err.message.includes("utilizzato")) {
                         errorMsg.innerText = "Questo codice è già stato utilizzato.";
                     } else {
                         errorMsg.innerText = "Errore di connessione.";
@@ -310,7 +268,6 @@
                 document.getElementById('fc-total-count').innerText = this.data.length;
             },
 
-            // --- UI ---
             getImageUrl(plant) {
                 const query = encodeURIComponent(plant.scientific + " botanical plant");
                 return `https://tse2.mm.bing.net/th?q=${query}&w=500&h=400&c=7&rs=1&p=0`;
@@ -376,7 +333,6 @@
                 document.getElementById('modal-common').innerText = p.common;
                 document.getElementById('modal-scientific').innerText = p.scientific;
                 document.getElementById('modal-family').innerText = p.family;
-                document.getElementById('modal-order').innerText = p.order || '-';
                 document.getElementById('modal-chars').innerText = p.characteristics || p.desc;
                 document.getElementById('modal-drug').innerText = p.drug_active || "Dati non disponibili.";
                 
@@ -470,7 +426,6 @@
             updateNav() { lucide.createIcons(); }
         };
 
-        // --- BAŞLAT ---
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
