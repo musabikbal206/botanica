@@ -182,9 +182,12 @@
     </div>
 
     <script>
+        // İSİM DEĞİŞTİRİLDİ: _supabase kullanıyoruz ki çakışma olmasın.
         const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // ÖNEMLİ: Değişken adı '_supabase' yapıldı.
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         const app = {
             data: [],
@@ -195,7 +198,6 @@
             quizAnswered: false,
 
             init() {
-                // Enter tuşu desteği
                 const codeInput = document.getElementById('access-code');
                 if (codeInput) {
                     codeInput.addEventListener('keypress', (e) => {
@@ -232,7 +234,8 @@
                 errorMsg.innerText = "";
 
                 try {
-                    const { data: response, error } = await supabase.rpc('verify_and_get_plants', { license_code: code });
+                    // ÖNEMLİ: Burada da _supabase kullanılıyor
+                    const { data: response, error } = await _supabase.rpc('verify_and_get_plants', { license_code: code });
 
                     if (error) throw error;
                     if (response.success === false) throw new Error(response.message);
