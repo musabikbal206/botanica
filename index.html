@@ -91,6 +91,29 @@
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
 
+    <div id="login-overlay" class="fixed inset-0 z-[100] bg-emerald-950 flex flex-col justify-center items-center text-white p-4 transition-all duration-500">
+        <div class="bg-white/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-emerald-500/30 max-w-md w-full text-center">
+            <div class="bg-emerald-100 p-4 rounded-full inline-flex mb-6">
+                <i data-lucide="lock" class="text-emerald-800 w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-serif font-bold mb-2">Hoşgeldiniz</h2>
+            <p class="text-emerald-200 text-sm mb-6">İçeriğe erişmek için lütfen erişim kodunuzu girin.</p>
+            
+            <input type="text" id="access-code" placeholder="XXXX-XXXX-XXXX" 
+                class="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-4 text-center text-white placeholder-emerald-400/50 outline-none focus:ring-2 focus:ring-emerald-400 mb-4 tracking-widest uppercase font-mono">
+            
+            <button onclick="verifyCode()" id="login-btn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20">
+                Giriş Yap
+            </button>
+            <p id="login-error" class="text-red-300 text-xs mt-4 min-h-[20px] font-bold"></p>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="fixed inset-0 z-[90] bg-white hidden flex-col justify-center items-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-600 mb-4"></div>
+        <p class="text-emerald-800 font-bold animate-pulse">Bitkiler Yükleniyor...</p>
+    </div>    
+
     <!-- Header -->
     <header class="bg-emerald-900 text-white p-4 sticky top-0 z-40 border-b-4 border-emerald-600 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -331,616 +354,79 @@
     
 
     <!-- JAVASCRIPT LOGIC -->
-    <script>
         // DATI COMPLETI ESTRATTI DAL PDF "TAVOLE BOTANICHE"
-        const plantDatabase = [
-            {
-                id: 1,
-                scientific: "Dryopteris filix-mas",
-                common: "Felce maschio",
-                family: "Dryopteridaceae",
-                order: "Dryopteridales",
-                desc: "Felce con grandi fronde pennatosette. Rizoma sotterraneo con squame color ruggine.",
-                characteristics: "Felce maschio che presenta grandi fronde pennatosette, inserite sul rizoma sotterraneo. I piccioli sono ricoperti di squame membranose, di color ruggine, che rivestono anche il rachide e le nervature secondarie. È una specie che vive nel sottobosco.",
-                drug_active: "La droga è costituita dal rizoma con un diametro di circa 2cm rivestito da palee, raccolto in autunno inverno, il suo colore è brunastro, l'odore debole, il sapore inizialmente dolce, poi amaro nauseante. È stata utilizzata in medicina come nematocida e tenicida, è una droga tossica che deve essere impiegata con cautela per evitare il suo assorbimento a livello gastro-intestinale. Il principio attivo è contenuto negli spazi intercellulari dove sporgono piccoli peli secretori interni, unicellulari, brevemente peduncolati, che contengono il principio attivo costituito da derivati del floroglucinolo indicati con il nome di filicina."
-            },
-            {
-                id: 2,
-                scientific: "Ginkgo biloba",
-                common: "Ginkgo",
-                family: "Ginkgoaceae",
-                order: "Ginkgoales",
-                desc: "Foglie a ventaglio bilobate. Pianta dioica (macroblasti e brachiblasti).",
-                characteristics: "È una pianta che può raggiungere i 30 m di altezza e con una diametro del tronco di 1 m. ha rami lunghi con foglie alterne (macroblasti) e rami corti con internodi quasi assenti (brachiblasti) e foglie apicali strettamente spiralate. Le foglie hanno forma a ventaglio e sono percorse da nervature dicotomiche, sono caduche e bilobate per la presenza di un'incisura piuttosto profonda (macroblasti) quelle dei brachiblasti sono quasi sempre intere o con un'incisura appena accennata. Le strutture di riproduzione si originano da gemme miste.",
-                drug_active: "Le foglie costituiscono la droga, contengono flavonoidi, diterpeni (conosciuti con il nome di ginkgolidi A, B, C) e sesquiterpeni, in forma lattonica. L'estratto di Ginkgo è ritenuto un vasoregolatore, dotato di un'azione vasodilatatrice arteriosa e vasocostrittrice venosa, un inibitore della ciclo-ossigenasi e della lipoossigenasi, un inibitore dell'aggregazione piastrinica ed eritocitaria, migliora l'irrorazione tissutale e attiva il metabolismo cellulare. L'estratto standardizzato che contiene flavonoidi per il 24% e Ginkolidi per il 6% è utilizzato nei casi di insufficienza celebrale: difficoltà di concentrazione, confusione, perdita di memoria, turbe dell'umore, per la cura dei disturbi del sistema circolatorio periferico."
-            },
-            {
-                id: 3,
-                scientific: "Pinus sylvestris",
-                common: "Pino silvestre",
-                family: "Pinaceae",
-                order: "Pinales",
-                desc: "Aghi riuniti a due. Corteccia grigia in basso, rossiccia in alto.",
-                characteristics: "Pianta sempreverde è una pianta che raggiunge in media i 25-30 m di altezza, talvolta anche i 40 m, la corteccia del tronco è di colore grigio-cenerino nella parte inferiore, rosso-mattone in quella superiore. Le foglie, aghifomi, con la superficie glauca, lunghe 7 cm circa e riunite a due a due su rametti molto corti, sono di colore grigio-verde. I coni, cioè le infiorescenze femminili, di forma conica e di color marrone chiaro, le infiorescenze maschili, riuniti in piccoli coni, nella porzione inferiore dei giovani rametti, producano una grande quantità di Polline che è diffuso dal vento, il frutto, infine, deriva dall'infiorescenza femminile, che dopo la fecondazione si accresce a formare una pigna di forma ovale-oblunga, con la base tondeggiante e l'apice acuto.",
-                drug_active: "La droga è contenuta nelle gemme, l'odore e il sapore sono aromatici e resinosi. Le gemme contengono glucidi, resina, essenza 1-2% (pinene e limonene levogiro), coniferoside ed un principio amaro (pinipicrina). Hanno una funzione balsamica ed espettorante, vengono adoperate nelle affezioni delle vie respiratorio per inalazioni, infuso, sciroppo, pastiglie. Dalla distillazione secca del legno si ottiene il catrame vegetale che è un prodotto bruno nerastro, semiliquido e omogeneo, contiene carburi, tracce di acidi organici, acidi resinici, soprattuto fenoli e loro eteri ha funzione antisettica e anticatarrale, usato per bronchiti e cistiti."
-            },
-            {
-                id: 4,
-                scientific: "Taxus baccata",
-                common: "Tasso",
-                family: "Taxaceae",
-                order: "Pinales",
-                desc: "Aghi appiattiti. Seme circondato da arillo rosso carnoso. Molto tossica.",
-                characteristics: "Albero sempreverde, dioico, alto circa 15 m. Le foglie sono persistenti, aghiformi, disposte in due file a spirale ai lati dei rametti. il seme è circondato da un arillo, rosso vivo a maturità per la presenza di rodoxantina. Tutta la pianta risulta tossica ad eccezione dell'arillo che viene mangiato dagli uccelli  4]",
-                drug_active: "Il principio attivo responsabile della tossicità di rami, foglie e semi, dove è presente in percentuale variabile fra lo 0,5 e il 2%, è un alcaloide, la tassina. Ha effetto narcotico e paralizzante sull'uomo e su molti animali domestici. Gli organi che ne contengono di più sono le foglie vecchie. Nel taxus brevifolia furono isolate due molecole diterpeniche ad attività antitumorale: il paclitaxel detto taxolo e il docetaxel. Si tratta di molecole che agiscono al livello del fuso mitotico impedendo l'assemblaggio della tubulina in microtubuli. Il basso contenuto in principi attivi, 0,01%, di t. brevifolia rendeva impossibile il loro uso poiché avrebbe condotto all'estinsione della specie. Oggi il taxolo è ottenuto per emisintesi da diacetilbaccatina che viene estratta dalle foglie di t.baccata fonte rinnovabile e non distruttibile per le piante."
-            },
-            {
-                id: 5,
-                scientific: "Ephedra distachya",
-                common: "Efedra",
-                family: "Ephedraceae",
-                order: "Ephedrales",
-                desc: "Cespugliosa, rami sottili e angolosi. Foglie squamose.",
-                characteristics: "Le specie di Èfedra sono piante cespugliose (o, in alcune specie, rampicanti) di altezza molto variabile, dai 40 cm ai 2 m. I rami sono sottili e angolosi e presentano dei solchi verticali. La radice è molto sviluppata. Le foglie sono squamose di colore verde grigiastro, inserite nei nodi a gruppi di tre o quattro. Essendo una Gimnosperma non ha i fiori come li intendiamo abitualmente, ma degli strobili, che possono essere maschili o femminili. Solitamente gli strobili si trovano sulla stessa pianta, possono essere sia separati che uniti in infiorescenze ermafrodite. I fiori maschili e femminili, simili tra loro, sono formati da un asse nel quale si inseriscono le brattee opposte. Il frutto è un falso frutto, formato dalle brattee, che può però diventare carnoso e colorato di rosso.",
-                drug_active: "Tra i principi attivi della pianta di ephedra vi è l'efedrina, un protoalcaloide dagli effetti simili a quelli delle anfetamine. L'efedrina viene estratta dai rami della pianta. L'efedrina può essere adoperata come rimedio alla mancanza di concentrazione, come acceleratore del metabolismo e come anoressizzante (fa diminuire l'appetito). L'efedrina ha, inoltre, una funzione antispasmodica, vasocostrittrice e broncodilatatrice come stimolante nervino, come ausilio nelle malattie cardiovascolari e nelle terapie finalizzate al trattamento dell'ipotensione. L'efedrina costituisce, infine, un valido aiuto contro l'orticaria. Oltre all'efedrina, l'ephedra conta tra i principi attivi anche la vitamina C."
-            },
-            {
-                id: 6,
-                scientific: "Laurus nobilis",
-                common: "Alloro",
-                family: "Lauraceae",
-                order: "Laurales",
-                desc: "Sempreverde aromatico. Foglie coriacee lanceolate, frutti neri.",
-                characteristics: "Albero alto fino a 10 m, con rami sottili e glabri che formano una densa corona piramidale. Il legno della pianta è aromatico ed emana il tipico profumo delle foglie. Le foglie, ovate, sono verde scuro, coriacee, lucide nella pagina superiore e opache in quella inferiore, sono inoltre molto profumate. L'alloro è una pianta dioica, cioè porta fiori, unisessuali, in due piante diverse, una con i fiori maschili e una con i fiori femminili (che portano poi i frutti). I fiori, di colore giallo chiaro, riuniti a formare una infiorescenza ad ombrella. I frutti sono drupe nere e lucide (quando mature) con un solo seme.",
-                drug_active: "La droga è costituita dalle foglie e dalle drupe, dalle foglie per idrodistillazione si ottiene un'essenza costituita dal cineolo, composizione varia a seconda dell'origine geografica. Le foglie contengono anche lattoni sesquiterpenici ed alcaloidi isochinolinici. Il frutto ha il mesocarpo oleoso dal quale si ottiene il burro di alloro. Le foglie vengono utilizzate per via orale per la cura dei disturbi digestivi."
-            },
-            {
-                id: 7,
-                scientific: "Cinnamomum camphora",
-                common: "Canfora",
-                family: "Lauraceae",
-                order: "Laurales",
-                desc: "Grande albero sempreverde. Foglie coriacee. Distillazione del legno.",
-                characteristics: "Grande albero sempreverde che può vivere per più di mille anni. Il fusto può raggiungere i 40-50 m di altezza. Le foglie sono lanceolate, coriacee, spesse, persistenti. Fiori bianchi, a perianzio di due verticilli caduco; androceo di quattro verticilli; gineceo monocarpellare; frutto a drupa nera.",
-                drug_active: "La canfora si ottiene principalmente dalla distillazione del legno di 24-40 anni circa. Dopo la cristallizzazione e filtrazione della canfora, l'olio essenziale può essere ulteriormente distillato ottenendo tre frazioni: una leggera dal colore bianco, contenente monoterpeni, una media di colore bruno contenente safrolo e una pesante di colore blu contenente sesquiterpeni. La canfora naturale è un analettico cardiaco e respiratorio ed un antisettico polmonare."
-            },
-            {
-                id: 8,
-                scientific: "Cinnamomum zeylanicum",
-                common: "Cannella",
-                family: "Lauraceae",
-                order: "Laurales",
-                desc: "Corteccia dei getti giovani. Odore aromatico caratteristico.",
-                characteristics: "La cannella è un albero sempreverde alto circa 10-15 m. Le foglie sono opposte, di forma ovale e allungata, possono raggiungere i 18 cm di lunghezza e i 5 cm di larghezza. I fiori, bianchi, sono riuniti in infiorescenze. Il frutto è una drupa che contiene un seme privo di albume.",
-                drug_active: "La droga è costituita dalla corteccia dei getti giovani che si sviluppano sui fusti. Nel parenchima liberiano sono presenti grandi cellule secretrici contenti amido ed olio essenziale e fibre isolate o in gruppi. L'odore è aromatico e il sapore dolciastro/aromatico. L'olio essenziale è costituito soprattutto da aldeide cinnammica, eugenolo acetato di cinnamile e da numerosi mono- e sesquiterpeni. La corteccia è ritenuta uno stimolante aromatico, viene inoltre utilizzato come sintomatico dei disturbi digestivi, nelle astenie e per facilitare l'aumento del peso. In vitro l'olio ha un'azione antibatterica e antifungina. L'aldeide cinnammica in forti dosi è sedativa del sistema nervoso centrale e stimolante respiratorio nel topo e del miocardio del cane."
-            },
-            {
-                id: 9,
-                scientific: "Peumus boldus",
-                common: "Boldo",
-                family: "Monimiaceae",
-                order: "Laurales",
-                desc: "Sempreverde cileno. Foglie opposte, coriacee, ovali. Odore canforato.",
-                characteristics: "Albero dioico sempreverde, 5-6 m di altezza. Ha foglie opposte, coriacee e ovali di colore verde opaco, che presentano un picciolo molto breve. I fiori maschili e femminili giallo pallido sono riuniti in infiorescenze cimose terminali. I maschili hanno numerosi stami quelli femminili portano più carpelli che poi si trasformano in piccole drupe glauche e traslucide.",
-                drug_active: "La droga è costituita dalle foglie, l'odore è leggermente canforato e il sapore aromatico. La droga contiene: un olio essenziale costituito da monoterpeni tra i quali l'ascaridolo (tossico), flavonoidi in forma eterosidica ed alcaloidi tra i quali la principale è la boldina. Per l'estrazione di essa viene usata anche la corteccia. Il boldo ha proprietà epatoprotettrici, diuretiche, stomachiche, coleretiche e colagoghe per facilitare le funzioni urinarie e digestive."
-            },
-            {
-                id: 10,
-                scientific: "Aconitum napellus",
-                common: "Aconito",
-                family: "Ranunculaceae",
-                order: "Ranunculales",
-                desc: "Fiori blu a elmo. Radici tuberizzate. Altamente tossica.",
-                characteristics: "Pianta erbacea perenne, a radice tuberizzata, con fusto eretto e poco ramificato, alto 0,50-2 m. le foglie sono alterne, glabre divise in 3-7 segmenti, che sono a loro volta divisi in lobi più o meno stretti. La pagina superiore è verde scura e lucida. l'infiorescenza è un racemo portato all'apice del caule. I fiori sono blu-violacei, costituiti da 5 sepali, i petali sono ridotti: 2 posteriori a 2 cornetti nettariferi e 3 a linguette. Gli stami sono numerosi e inseriti sulla spirale del ricettacolo. La pianta presenta due radici tuberizzate: una, in continuazione con la pianta fiorita e l'altra attaccata lateralmente con un corto peduncolo all'apice della gemma.",
-                drug_active: "La droga è costituita dalle radici e dai tuberi della pianta l'odore è nullo, il sapore prima è dolciastro poi acre, contengono principi attivi altamente tossici. In verità, le sostanze tossiche sono presenti in tutte le parti della pianta, ma nelle radici e nei tuberi si trovano in concentrazioni maggiori (0,5-1,9%). I suddetti principi tossici sono alcaloidi policiclici, il cui principale esponente è rappresentato dall'aconitina. A fianco di questa sostanza, ritroviamo inoltre la mesaconitina, l'ipoaconitina, jesaconitina, pseudoaconitina, lycaconitina, neopellina, neolina, napellina e l'oxo-aconitina. L'aconitina è estremamente tossica, tanto che la dose letale per l'uomo è di appena 3-6 mg, corrispondenti a circa 3-4 grammi di tubero fresco."
-            },
-            {
-                id: 11,
-                scientific: "Adonis vernalis",
-                common: "Adonide",
-                family: "Ranunculaceae",
-                order: "Ranunculales",
-                desc: "Fiori gialli grandi, foglie pennatosette. Cardiotonico.",
-                characteristics: "Pianta erbacea, a rizoma corto dal quale sorgono uno o più scapi eretti, glabri di circa 15-30 cm, con foglie inferiori ridotte a squame e le altre pennatosette. I fiori sono terminali, molto grandi, composti da 5 sepali e 12-18 petali giallo pallidi, hanno numerosi stami e carpelli.",
-                drug_active: "La droga viene estratta dalla pianta intera raccolta durante la fioritura, esclusa la radice, l'odore è nullo e il sapore è amaro. Da essa si estrae il principio attivo composto da cardenolidi il principale dei quali è la cimarina, un glucoside cardiotonico costituito da k-strofantidina e D-cimarosio, sono presenti anche dei flavonoidi. L'adonide è poco usato in medicina come cardiotonico. Può essere usato con le altre piante per infusi ad azione sedativa e calmante."
-            },
-            {
-                id: 12,
-                scientific: "Hydrastis canadensis",
-                common: "Idraste",
-                family: "Ranunculaceae",
-                order: "Ranunculales",
-                desc: "Piccola erbacea, rizoma corto, frutto bacca rossa composta.",
-                characteristics: "È una piccola pianta erbacea perenne, dotata di un corto rizoma che porta numerose, sottili radici. Il fusto aereo di 40-50 cm di altezza porta due o tre foglie palmato-lobate ed un solo fiore terminale. Gli stami e i carpelli sono numerosi. Il frutto è composto, formato da numerose bacche rosse.",
-                drug_active: "La droga è costituita dal rizoma e dalle radici, l'odore è sgradevole e il sapore molto amaro. I principi attivi sono degli alcaloidi isochinolinici: idrastina e berberina. L'idraste è utilizzato in forme galeniche (tintura), come vasocostrittore ed emostatico è associato ad altre droghe ad azione vasoprotettrice. La berberina ha proprietà batteriostatiche a debole dosaggio, a forte dosaggio è battericida, attivo contro stafilococchi, streptococchi, salmonella, vibrioni etc.. ha anche proprietà fungicide ed è tossica per alcuni protozoi."
-            },
-            {
-                id: 13,
-                scientific: "Papaver somniferum",
-                common: "Papavero da oppio",
-                family: "Papaveraceae",
-                order: "Papaverales",
-                desc: "Capsula poricida da cui si estrae lattice (oppio).",
-                characteristics: "Pianta annua, erbacea, fusti robusti, eretti e poco ramificati. Altezza 100-150 cm. Le grandi foglie sono alterne, munite di un corto picciolo. I grandi fiori solitari sbocciano all'apice di lunghi peduncoli fiorali ricoperti di setole cespitose, sono ermafroditi, dotati di un calice costituito da 2 sepali caduchi, la corolla è composta da 4 petali, pieghettati nel bocciolo. La corolla cade presto. Il frutto è una capsula poricida detta treto, i semi sono molto piccoli. Gli stami, ad antere nere sono molto numerosi.",
-                drug_active: "La droga tradizionale è l'oppio, ossia il latice disseccato, ottenuto per incisione delle capsule immature ha un odore viroso e caratteristiche e un sapore amaro. Il papavero contiene alcaloidi, presenti solo nel latice, i principali alcaloidi sono: morfina, codeina, tebaina, noscapina, narceina, papaverina. L'alcaloide più abbondante è la morfina che ha azione stereospecifica, reversibile, su recettori specifici, presenti, principalmente, a livello del sistema nervoso centrale. A livello di questo ha un effetto analgesico, da dipendenza fisica e psichica."
-            },
-            {
-                id: 14,
-                scientific: "Chelidonium majus",
-                common: "Celidonia",
-                family: "Papaveraceae",
-                order: "Papaverales",
-                desc: "Fiori gialli a 4 petali. Secerne lattice giallo-arancio (verruche).",
-                characteristics: "Pianta erbacea perenne, alta da 50 a 80 cm, a fusto ramificato. Le foglie pennatosette, molli, nella pagina inferiori verdi glauche. I fiori hanno calice composto da due sepali caduchi e corolla con 4 petali gialli i fiori sono 2-7. Il frutto, allungato, apparentemente una siliqua, in realtà è una capsula. Dai rametti spezzati esce un latice giallo-arancio che è uno dei tratti inconfondibili della pianta. Esposto all'aria, il lattice ossida rapidamente e scurisce.",
-                drug_active: "Ha un latice aranciato che contiene una trentina di alcaloidi isochinolinici, in particolare la copticina, ma anche berberina e sparteina. Il latice viene usato, in medicina popolare, per la cura delle verruche. L'estratto è antibatterico ed antivirale."
-            },
-            {
-                id: 15,
-                scientific: "Humulus lupulus",
-                common: "Luppolo",
-                family: "Cannabaceae",
-                order: "Urticales",
-                desc: "Rampicante. Coni femminili con ghiandole resinose (lupulina).",
-                characteristics: "Pianta erbacea perenne che può raggiungere i 9-10 m di lunghezza, può vivere dai 10 ai 20 anni. Le foglie sono cuoriformi, picciolate, opposte, munite di 3-5 lobi seghettati. Essendo una specie dioica, i fiori maschio è disposto in grappoli composti, situati all'ascella delle foglie e femmina raggruppate in infiorescenze ovate pendule, sono unisessuali e di colore verdognolo, sono presenti su individui separati, ciascuna infiorescenza è ricca di bratte fogliacee. Le infiorescenze femminili sono ricche di ghiandole resinose secernenti una sostanza (oleoresina) giallastra e dal sapore amaro chiamata lupulina.",
-                drug_active: "Nei coni di luppolo sono state finora identificate più di 1000 sostanze chimiche, che possono essere raggruppate in componenti dell'olio essenziale (mono e sesquiterpeni), acidi amari e flavonoidi prenilati. Sono presenti anche glicosidi flavonolici (astragalina, kempferolo, quercetina, quercitrina, rutina) e quantità apprezzabili di tannini (2-4%). Il luppolo è composto da α-acidi (umulone, adumulone e coumulone), β-acidi (lupulone, adlupulone e colupulone), da polifenoli (es. flobafeni, xantumolo) e numerosi oli essenziali, che vengono utilizzati per aromatizzare e conferire alla birra il suo gusto caratteristico."
-            },
-            {
-                id: 16,
-                scientific: "Cannabis sativa",
-                common: "Canapa",
-                family: "Cannabaceae",
-                order: "Urticales",
-                desc: "Foglie palmate. Infiorescenze femminili ricche di resina.",
-                characteristics: "Piante annuale di 2-3 m più o meno ramificate con escrescenze resinose, angolate, a volte cave, specialmente al di sopra del primo paio di foglie; foglie basali opposte, le più alte alternate, palmate, raramente singole, lanceolate; fiori maschili portano 5 sepali e 5 stami, sono riuniti in racemi ascellari; quelli femminili hanno un calice urceolato che circonda l'ovario che porta un solo ovulo il frutto è una noce e trattengono strettamente i semi con un endosperma carnoso e un embrione curvo.",
-                drug_active: "La droga si trova nelle foglie e soprattutto sulle brattee dell'infiorescenze femminili dove si trovano numerose ghiandole contenenti la resina. I principi attivi più conosciuti della cannabis sono il THC (tetraidrocannabinolo) e il CBD (cannabidiolo)."
-            },
-            {
-                id: 17,
-                scientific: "Rheum palmatum",
-                common: "Rabarbaro",
-                family: "Polygonaceae",
-                order: "Polygonales",
-                desc: "Grandi foglie palmato-lobate. Rizoma carnoso.",
-                characteristics: "Le specie del genere Rheum hanno un robusto rizoma carnoso da cui viene emesso ogni anno un nuovo apparato vegetativo che può raggiungere altezze anche superiori ai 200 cm. Le foglie, di grandi dimensioni, sono in gran parte riunite in una rosetta basale, disposte con fillotassi alternata, con piccioli lunghi cilindrici e carnosi e lembo variabile da ovato-cordato a reniforme, semplice o palmato-lobato. Il margine è intero o dentato, più o meno ondulato. I fiori sono bisessuali, riuniti in pannocchie terminali lungamente peduncolate che possono raggiungere alcuni decimetri di lunghezza. I singoli fiori hanno simmetria raggiata, con perigonio composto da sei tepali di colore bianco o giallastro. Stami in numero di 6 o 9. Ovario supero, contenente un solo ovulo. Il frutto è una noce trigona con spigoli prolungati in un'ala membranosa.",
-                drug_active: "I principi attivi principali contenuti nel rizoma sono composti antrachinonici e antranolici liberi e soprattutto in forma di derivati glucosidici, fra i quali il più importante è la reina. Fra i principi attivi secondari ci sono i tannini. La presenza dei tannini come principio attivo secondario fa sì che il rabarbaro possa essere utilizzato anche come astringente della pelle e delle mucose della cavità orale e nasale e come antibatterico."
-            },
-            {
-                id: 18,
-                scientific: "Hypericum perforatum",
-                common: "Iperico",
-                family: "Clusiaceae",
-                order: "Theales",
-                desc: "Fiori gialli. Foglie con tasche secretorie ('buchi') controluce.",
-                characteristics: "Erba bienne, con fusto diritto, ramificato nella parte apicale, di 25-60 cm. Ha foglie brevemente picciolate, ovali-oblunghe con il lembo tempestato di numerosi piccoli punti traslucidi, costituiti da tasche escretrici, e particolari strutture ghiandolari dette globuli neri, distribuite lungo il margine. I fiori sono riuniti in 5 petali gialli, hanno numerosi stami e l'ovario è costituito da 3 carpelli. Il frutto è una capsula ovoidale.",
-                drug_active: "La droga è costituita dalle sommità fiorite che hanno odore balsamico e sapore aromatico, amaro e astringente. Esse contengono un olio essenziale, costituito da carburi terpenici, derivati polifenolici, naftadiantroni contenuti nelle ghiandole nere, derivati del floroglucinolo e flavonoidi. Può essere utile nei trattamenti per la depressione ed è associata insieme ad altre droghe come cardiotonico e anticoncezionale."
-            },
-            {
-                id: 19,
-                scientific: "Malva sylvestris",
-                common: "Malva",
-                family: "Malvaceae",
-                order: "Malvales",
-                desc: "Fiori viola-rosati. Ricca di mucillagini emollienti.",
-                characteristics: "Pianta erbacea bienne o perenne con fusto dritto, poco ramificato con foglie lungamente picciolate a lembo palmato e margini dentati. I fiori sono disposti in gruppi all'ascella delle foglie.",
-                drug_active: "La droga è costituita dalle foglie e dai fiori che sono ricchi di mucillaggini che vengono usati, per le loro proprietà emolienti e bechiche."
-            },
-            {
-                id: 20,
-                scientific: "Althaea officinalis",
-                common: "Altea",
-                family: "Malvaceae",
-                order: "Malvales",
-                desc: "Foglie vellutate grigio-verdi. Radice emolliente.",
-                characteristics: "Erba perenne con fusto alto fino a 1,20 m, le foglie sono palminervie, lobate e dentate. Sia il fusto che le foglie sono coperti da peli densi, i fiori sono raggruppati all'ascella delle foglie con un calicetto di 6-9 pezzi, un calice di 5 sepali e una corolla con 5 petali bianco-rosati, hanno numerosi stami e carpelli.",
-                drug_active: "Tutta la pianta contiene mucillaggini ma si preferisce usare le radici e le foglie, non hanno odore e il sapore è mucillagginoso. La mucillaggine ha una struttura fortamente ramificata composta da D-galattosio, L-ramnosio, acidi D-glucoronico e D-galatturonico. La pianta viene utilizzata come emolliente, per via orale è usata per i disturbi funzionali dell'apparato digerente e nel trattamento sintomatico della tosse, per uso topico viene usata come antpruriginoso nelle affezioni dermatologiche e come antalgico nelle affezioni della cavità boccale e della faringe, è impiegata anche in caso di irritazione o dolore oculare."
-            },
-            {
-                id: 21,
-                scientific: "Brassica nigra",
-                common: "Senape nera",
-                family: "Brassicaceae",
-                order: "Capparales",
-                desc: "Semi scuri piccanti. Contiene sinigroside.",
-                characteristics: "Erba annuale con fusto dritto alto 1-1,50m ha peli pungenti alla base. Le foglie basali sono profondamente lobate, quelle superiori strette, intere o dentate. Le infiorescenze a racemo hanno fiori gialli.",
-                drug_active: "La droga è costituita dai semi ovoidali che contengono mucillaggini, lipidi ad acidi grassi insaturi e l'eteroside solforato caratteristico sinigroside. È presente inoltre l'enzima specifico per la sua idrolisi, la mirosina. Messi in acqua e pestati i semi sviluppan un odore pungente ed un effetto lacrimogeno dovuto all'isotiocianato di allile che si forma dal sinigroside per azione della mirosina. L'isotiocianato a contatto con la pelle ha un effetto rubefacente ed in caso di contatto prolungato, vescicante."
-            },
-            {
-                id: 22,
-                scientific: "Sinapis alba",
-                common: "Senape bianca",
-                family: "Brassicaceae",
-                order: "Capparales",
-                desc: "Fiori gialli. Semi chiari. Non volatile come la nera.",
-                characteristics: "Pianta erbacea annuale di 30-80 cm di altezza con fusti ramificati, peli radi e foglie profondamente divise e dentate. I fiori gialli e odorosi sono disposti in racemi terminali.",
-                drug_active: "I semi contengono oltre a mucillaggine il glucoside sinalboside e mirosina si libera se messi in acua e pestati l'isotiocianato di paraidrossibenzle che non provoca odore sgradevole ed effetto lacrimogeno in quanto non è motlo volatile."
-            },
-            {
-                id: 23,
-                scientific: "Cassia angustifolia",
-                common: "Senna",
-                family: "Fabaceae",
-                order: "Fabales",
-                desc: "Foglioline lanceolate asimmetriche. Legume appiattito.",
-                characteristics: "È una pianta sufruttice alta 40-60 cm a fusto dritto, le foglie sono composte, paripennate e lanceolate, acute all'apice e leggermente asimmetriche alla base. I fiori sono raggruppati in rami ascellari costituiti da un calice di 5 pezzi, una corolla di 5 petali giallo vivo, 10 stami liberi di cui 3 sterili. Il frutto è un legume lomentaceo più o meno lungo, liscio con 6-8 semi separati da segmenti parenchimatici del pericarpo. Presenta un tegumento a rughe trasversali, sinuose.",
-                drug_active: "La droga è costituita dalle foglioline, private del rachide e dal frutto. Le foglie e il legume hanno composizione molto simile con differenze più quantitative che qualitative. I principi attivi caratterizzanti sono i sennosidi, eterosidi a genina diantronica. I più abbondanti sono il sennoside A e B. nella droga secca sono presenti anche tracce di antrachinoni liberi, e loro eterosidi ed eerosidi di antroni. Il contenuto medio in derivati antracenici varia dal 2 al 5%. Nei frutti essi sono presenti nel pericarpo, i semi sono ritenuti irritanti e spesso vengono eliminati. È utilizzata come lassativo, a forti dosi come purgante."
-            },
-            {
-                id: 24,
-                scientific: "Glycyrrhiza glabra",
-                common: "Liquirizia",
-                family: "Fabaceae",
-                order: "Fabales",
-                desc: "Radici e stoloni dolci. Legume glabro.",
-                characteristics: "Pianta erbacea perenne con la parte ipogea molto sviluppata, costituita da radici e da numerosi stoloni sotterranei. I cauli eretti possono raggiungere 1,20-1,50 m questi portano foglie composte imparipennate alterne. I fiori sono piccoli e riuniti in infiorescenze a racemo, il frutto è un legume appiattito di circa 2 cm.",
-                drug_active: "La droga è costituita dalle radici e dagli stoloni che hanno odoro e sapore caratteristici. La droga contiene amido, saccarosio e D-glucosio, cumarine, triterpenoidi, steroli, molti flavonoidi (calconi, isoflavoni, isoflavonoli, isoflaveni, cumestani), ma soprattutto saponosidi triterpenici ai quali è attribuita l'azione farmacologica. La glicirrizzina è il principale saponosoide che costituisce il 3-5% della droga secca. La liquirizia è considerata un antitussivo ed è attiva contro l'ulcera gastrica. In vitro ha dimostrato un'azione antivirale, antibatterica e antiepatotossica, immunostimolante e cicatrizzante. Ha proprietà edulcorante."
-            },
-            {
-                id: 25,
-                scientific: "Eucalyptus globulus",
-                common: "Eucalipto",
-                family: "Myrtaceae",
-                order: "Myrtales",
-                desc: "Foglie falciformi negli adulti. Odore balsamico forte.",
-                characteristics: "È un albero di grande statura, ha un caratteristico dimorfismo fogliare, le piante giovani ed i rami giovani presentano foglie dorsoventrali, opposte, sessili, con lembo ovale/rotondeggiante, di colore verde glauco, ricoperte di un rivestimento ceroso, i rami adulti presentano foglie alterne, brevemente picciolate. I grassi bocci fiorali hanno una forma di un'urna legnosa, rugosa e coperta di cera, sono formate da 4 sepali che formani la base dell'urna e 4 petali che formano un cappoccio entrambi saldati tra loro.",
-                drug_active: "La droga è costituita dalle foglie falciformi dei rami adulti, che sono particolarmente aromatiche. Il principio attivo contenuto nelle foglie è l'olio essenziale costituito per il 70-80% da 1,8-cineolo o eucaliptolo. Ha azione antisettica, espettorante, stimolante dell'epitelio bronchiale e mucolitica. Ha anche un'azione decongestionante delle prime vie respiratorie."
-            },
-            {
-                id: 26,
-                scientific: "Syzygium aromaticum",
-                common: "Chiodi di garofano",
-                family: "Myrtaceae",
-                order: "Myrtales",
-                desc: "Bottoni fiorali essiccati ricchi di olio essenziale.",
-                characteristics: "È un albero di 10-12 m con foglie persistenti, opposte, ovali, coriacee. I fiori sono portati all'estremità dei rami in cime compatte e ramificate. I fiori hanno 4 sepali che poi diventano rossi a maturazione e 4 petali bianco-rosati, caduchi e hanno numerosi stami. I frutti sono bacche allungate.",
-                drug_active: "La droga è contenuta nella bacca, detta chiodo di garofano, esso contiene una notevole quantità di olio essenziale, il cui costituente principale è l'eugenolo, libero ed in forma di acetato di eugenile, esso è accompagnato da composti terpenici, alifatici, aromatici ed eterociclici fra cui il β-cariofillene. Fiori e foglie sono destinati alla distillazione. I chiodi di garofano sono usati per la cura e disinfezione di piccole piaghe, come antalgico per la cura di cefalee e dolori di denti, per la cura di affezioni del cavo orale e della faringe, per l'igiene della bocca. L'olio e il suo principale costituente, l'eugenolo è un potente antiaggregante piastrinico."
-            },
-            {
-                id: 27,
-                scientific: "Ricinus communis",
-                common: "Ricino",
-                family: "Euphorbiaceae",
-                order: "Euphorbiales",
-                desc: "Foglie grandi palmate. Semi marmorizzati. Olio purgante.",
-                characteristics: "È una pianta che può essere annuale o perenne dipende dal clima, arriva ad un'altezza di 2-3 m, il fusto è dritto, ramificato e porta foglie palmato-partite con 5-12 lobi, lanceolate, dentato-seghettate. I fiori maschili e femminili sono sulla stessa pianta e sono raggruppati in glomeruli e disposti in racemi od ascellari, i fiori maschili sono situati nella parte basale dell'infiorescenza mentre quelli femminili nella parte alta dell'infiorescenza. Il frutto è una grossa capsula munita di aculei, i semi hanno un tegumento liscio, brillante, grigio, marmorizzato di rosso-bruno e portano ad un'estremità una protuberanza carnosa detta caruncola.",
-                drug_active: "La droga è costituita dai semi che hanno un albume molto sviluppato con cellule ricche di olio e aleurone. L'olio è costituito trigliceridi dell'acido ricinoleico, e da altri trigliceridi composti da due residui di acido ricinoleico, il terzo residuo può essere acido oleico, linoleico, stearico o palmitico. Nel seme sono presenti anche sostanze azotate: la ricinina che è un alcaloide debolmente tossico e una glicoproteina molto tossica, la ricina. L'olio di ricino è un purgante drastico."
-            },
-            {
-                id: 28,
-                scientific: "Rhamnus purshiana",
-                common: "Cascara",
-                family: "Rhamnaceae",
-                order: "Rosales",
-                desc: "Corteccia usata come lassativo. Nord America.",
-                characteristics: "È un albero o arbusto di 6-12 m, con foglie alterne, ovali, con piccoli fiori pentameri, bianco-verdastri. Il frutto è una piccola drupa nera a maturità.",
-                drug_active: "La droga è costituita dalla corteccia e dai rami, la corteccia di cascara contiene etrosidi idrossantiacenici dei quali i principali sono i cascarosidi A,B,C,D, ha gli stessi usi e impieghi della frangula."
-            },
-            {
-                id: 29,
-                scientific: "Frangula alnus",
-                common: "Frangola",
-                family: "Rhamnaceae",
-                order: "Rosales",
-                desc: "Piccolo albero. Corteccia lassativa. Drupa rossa poi nera.",
-                characteristics: "Piccolo albero o arbusto che può raggiungere 4-5 m di altezza. I rami sono poco numerosi, portano foglie alterne, picciolate, intere, ovali- ellittiche. I fiori sono piccoli, pentameri e sono disposti in fascetti all'ascella delle foglie. Il frutto è una piccola drupa, prima rossa e poi nera a maturazione.",
-                drug_active: "La droga è costituita dalla corteccia del tronco e dei rami, raccolti al momento della fioritura, i principi attivi della corteccia sono derivati antracenici, presenti soprattutto in forma eterosidica sotto differenti forme: franguloside A e B o frangulina e glucofranguloside A e B o gluco-frangulina. La frangola è utilizzata come lassativo."
-            },
-            {
-                id: 30,
-                scientific: "Erythroxylum coca",
-                common: "Coca",
-                family: "Erythroxylaceae",
-                order: "Euphorbiales",
-                desc: "Foglie con due linee curve parallele alla nervatura.",
-                characteristics: "Albero alto 1-3 m, molto ramificato, con scorza di colore rossastro che porta foglie intere, ovali, brevemente picciolate, nella pagina inferiori sono presenti due linee curve che delimitano uno spazio ovale ai lati della nervatura centrale. I fiori sono pentameri, bianco-giallastro, isolati o raggruppati all'ascella delle foglie, hanno 10 stami e 3 carpelli, il frutto è una piccola drupa rossa.",
-                drug_active: "La droga è presente nelle foglie che contengono una quantità variabile di alcaloidi, il costituente principale è un alcaloide tropanico, la cocaina accompagnata da altri alcaloidi derivati e alcaloidi pirrolidinici: igrina e cuscoigrina. Sono presenti inoltre un olio essenziale, flavonoidi e tannini. La cocaina è un anestetico locale ed un simpaticomimetico che provoca una stimolazione adrenergica che comporta ipertermia, midriasi, vasocostrizione, aumento del ritmo cardiaco ecc... e a livello centrale, una sensazione di euforia, stimolazione intellettuale, disinibizione, iperattività."
-            },
-            {
-                id: 31,
-                scientific: "Panax ginseng",
-                common: "Ginseng",
-                family: "Araliaceae",
-                order: "Apiales",
-                desc: "Radice antropomorfa. Foglie palmate a 5.",
-                characteristics: "Pianta erbacea perenne con radici tuberizzate, rami eretti che portano foglie palmato-lobate a 5 foglioline. I fiori sono bianchi e sono riuniti in ombrelle, il frutto è una bacca rossa che contiene 2 semi.  ",
-                drug_active: "La droga è costituita dalla radice fusiforme o cilindrica. I principi attivi presenti sono: polisaccaridi, glicopeptidi (panaxani), vitamine, steroli, amminoacidi, peptidi, poliini (panaxinolo e panaxitriolo) ed un olio essenziale caratterizzato dalla presenza di sesquiterpeni, presenta una ventina di saponosoidi, una ventina di genine tetracicliche della serie del dammarano. Ha un effetto stimolante sul sistema nervoso centrale, aumenta la resistenza alla fatica e allo stress, migliora la memoria e ha effetto anabolizzante. La droga è reclamizzata come \"adattogena\", cioè sarebbe in grado di stimolare \"la resistenza non specifica\" dell'organismo."
-            },
-            {
-                id: 32,
-                scientific: "Foeniculum vulgare",
-                common: "Finocchio",
-                family: "Apiaceae",
-                order: "Apiales",
-                desc: "Foglie filiformi. Odore anice. Frutti diacheni.",
-                characteristics: "Erba che può raggiungere anche i 2 m di altezza, ha foglie divise in lacinie filiformi, munite di guaine molto sviluppate. I fiori, di colore giallo-verde sono riuniti in obrelle composte con odore caratteristico. I frutti sono diacheni cilindrici i cui merocarpi presentano costole sporgenti e caratteristico odore di anice.",
-                drug_active: "La droga è costituita dagli acheni che contengono l'olio essenziale, l'olio di finocchio dolce e amaro contengono anetolo, estragolo e fencone con differenti percentuali, quello dolce ha in più furanocumarine (imperatorina, bergaptene, xantotoxolo). Il finocchio viene impiegato come galattogeno, stomachico e carminativo, nei disturbi digestivi quali gonfiore di stomaco, eruttazioni, flatulenza ecc.. viene inoltre utilizzato come sorgente industriale di anetolo."
-            },
-            {
-                id: 33,
-                scientific: "Pimpinella anisum",
-                common: "Anice verde",
-                family: "Apiaceae",
-                order: "Apiales",
-                desc: "Fiori bianchi. Frutti ovoidi pelosi. Sapore di anice.",
-                characteristics: "Erba annuale con foglie cordiformi alla base, pennato-composte a lobi dentati nella parte mediana e trifidi a divisioni lineari all'apice. I frutti sono dei diacheni ovoidi-piriformi, verdi-giallastri, ciascun merocarpo è attaccato per l'apice al carpoforo ed ha una faccia dorsale convessa, ricoperta di peli verrucosi, visibili al microscopio.",
-                drug_active: "La droga è costituita dai frutti che contengono oltre ai lipidi e flavonoidi, un olio essenziale il cui costituente principale è anetolo accompagnato da estragolo, anisaldeide, pseudoisoeugenio-2-metilbutirrato. Negli oli essenziali, parzialmente ossidati, può essere presente anche l'acido anisico, alcool e cetone anisico. L'anice verde è considerato uno stomachico carminativo, antispasmodico, galattagogo e anche per i disturbi digestivi, come gonfiore gastrico, eruttazioni, flatulenza ecc..."
-            },
-            {
-                id: 34,
-                scientific: "Gentiana lutea",
-                common: "Genziana",
-                family: "Gentianaceae",
-                order: "Gentianales",
-                desc: "Fiori gialli a stella verticillati. Radice amara.",
-                characteristics: "Pianta erbacea perenne, glabra con caule semplice, eretto, cilindrico ha foglie opposte, brevemente picciolate alla base, sul fusto amplessicauli ruotate di 90° ad ogni nodo. Il lembo è ovale ed è percorso da 5-7 nervature longitudinali, convergenti all'apice. I fiori sono grandi, giallo-oro, raccolti in fascetti all'ascella delle foglie superiori e costituiscono una specie di grossa pannocchia, hanno un calice a forma di spata e corolla stellata a 5-9 lobi lanceolati-acuti, saldati alla base, gli stami portano lunghe antere rosse. Il frutto è una capsula ovoide-acuminata, sormontata da uno stigma bifido.",
-                drug_active: "La droga è costituita dalle radici e contiene dei seco-iridoidi: gentiopicroside, amarogenzioside ed esteri dello sveroside e della svertamarina. Il colore giallo è dovuto alla presenza di xantoni, sono inoltre presenti fitosteroli, fenoli, oligosaccaridi, pectina. Non contiene amido ma un trisaccaride caratteristico delle Genzianaceae, il genziobiosio. La genziana viene utilizzata per stimolare l'appetito come amaro, tonico, eupeptico."
-            },
-            {
-                id: 35,
-                scientific: "Strophanthus gratus",
-                common: "Strofanto",
-                family: "Apocynaceae",
-                order: "Gentianales",
-                desc: "Semi con ciuffetto di peli. Cardiotonico.",
-                characteristics: "Piante legnose/erbacee con foglie ellittiche, più o meno vellutate, verticillate con 3-4 foglie. I fiori di diverso colore a seconda della specie sono riuniti in infiorescenze cimose -corimbiformi. Il frutto è costituito da due follicoli divergenti e opposti che contengono moltissimi semi che hanno la caratteristica di essere sormontati da un ciuffetto di peli che li rende di aspetto vellutato.",
-                drug_active: "La droga è costituita dai semi privati del ventaglietto di peli apicali, contengono eterosidi cardiotonici: oubaina o g-strofantina in (S.gratus), k-strofantina in (S.kombe), h-strofantina (S. hispidus). Gli eterosidi cardiotonici di questa specie sono stati utilizzati come cardiotonico di urgenza."
-            },
-            {
-                id: 36,
-                scientific: "Rauwolfia serpentina",
-                common: "Rauwolfia",
-                family: "Apocynaceae",
-                order: "Gentianales",
-                desc: "Radici tortuose. Usata per ipertensione.",
-                characteristics: "Arbusto sempreverde, con grossa radice fittonante e fusti gracili alti circa 1 m. le foglie sono oblunghe, acute, verticillate a 3 o a 5, i fiori sono piccoli, pentameri, bianchi o rasa pallido. I frutti sono piccole drupe ovoidi, raggruppate due a due e nere a maturità.",
-                drug_active: "La droga è costituita dalle radici tortuose che contengono numerosi alcaloidi di cui i principali sono: reserpina, rescinnamina e derivati, quali la deserpidina, ajmalicina (o raubasina) e ajmalina. La reserpina è stata utilizzata in passato per le sue proprietà sedative e ipotensive contro l'ipertensione arteriosa. L'ajmalicina è uno spasmolitico, l'ajmalina è molto tossica."
-            },
-            {
-                id: 37,
-                scientific: "Catharanthus roseus",
-                common: "Pervinca del Madagascar",
-                family: "Apocynaceae",
-                order: "Gentianales",
-                desc: "Fiore rosa simile alla pervinca. Antitumorale.",
-                characteristics: "Piccolo suffrutice, legnosa alla base, alta 40-80 cm con foglie opposte, ovoidali, lucide, arrotondate all'apice. Il fiore, di forma simile a quello della pervinca, è rosa.",
-                drug_active: "Tutta la pianta contiene numerosi alcaloidi tutti di derivazione indolica, tra questi un certo numero ha proprietà citostatiche, in modo particolare la vincristina e la vinblastina che è un po' più abbondante. Questi due alcaloidi hanno proprietà antimitotiche in quanto fissano sulla tubulina ed impediscono la formazione del fuso mitotico."
-            },
-            {
-                id: 38,
-                scientific: "Atropa belladonna",
-                common: "Belladonna",
-                family: "Solanaceae",
-                order: "Solanales",
-                desc: "Bacche nere lucide col calice a stella. Fiori violacei.",
-                characteristics: "Pianta erbacea e perenne, dotata di un grosso rizoma dal quale si sviluppa un fusto robusto, eretto e ramificato, di altezza compresa tra i 70- 150 cm. Le foglie sono semplici, picciolate, di forma ovale-lanceolata, alternate nella zona superiore a foglie più piccole; I fiori sono ascellari e penduli; presentano un calice a 5 sepali ed una corolla a 5 petali di forma campanulata-tubulosa e di colore violaceo cupo; i frutti sono lucide bacche nere, di piccole dimensioni, contornate dal calice che, durante la maturazione, si accresce aprendosi a stella.",
-                drug_active: "Il principio attivo della pianta è l'atropina o DL-giusciamina. Le foglie della belladonna contengono alcaloidi come atropina, scopolamina, L- giusciamina, con un contenuto complessivo di min. 0,3%. Nelle radici raggiunge min. 0,5%. L'effetto complessivo è parasimpatolitico / anticolinergico per via di un'inibizione competitiva del recettore del trasmettitore neuromuscolare acetilcolina. Viene usata per faringiti, rinofaringiti, tracheobronchiti e tonsilliti in cui si avverte il bisogno di deglutire in continuazione, febbre durante l'influenza, convulsioni infantili da febbre elevata, Cefalea vasomotoria violenta, pulsante, Processi infiammatori locali con arrossamento \"brillante\", tumefazione, calore intenso e radiante, dolore acuto, violento e pulsante, Attacchi di delirio, ipersensibilità al rumore e alla luce intensa."
-            },
-            {
-                id: 39,
-                scientific: "Hyoscyamus niger",
-                common: "Giusquiamo",
-                family: "Solanaceae",
-                order: "Solanales",
-                desc: "Corolla giallastra reticolata di viola. Fetida.",
-                characteristics: "Pianta erbacea annua o bienne, alta 40-70 cm, peloso- vischiosa e fetida con foglie flaccide, dentato-sinuate, picciolate alla base e sessili lungo il fusto. I fiori presentano una corolla imbutiforme di 5 petali, color giallastro con fine reticolatura violetta, sono riuniti in corti racemi nella parte apicale del fusto, all'ascella di una brattea ben sviluppata. Il frutto è una pisside.",
-                drug_active: "La droga è costituita dalle foglie contenenti alcaloidi: iosciamina, atropina, scopolamina che rappresenta circa la metà degli alcaloidi totali con effetto sedativo, depressivo, ipnotico, amnestetizzante a livello del sistema nervoso centrale. La presenza della scopolamina accentua le sua proprietà sedative della droga che viene usata aome antinevralgenico e nella profilassi dei disturbi dovuti a movimento."
-            },
-            {
-                id: 40,
-                scientific: "Datura stramonium",
-                common: "Stramonio",
-                family: "Solanaceae",
-                order: "Solanales",
-                desc: "Fiori bianchi a tromba. Capsula spinosa. Fetida.",
-                characteristics: "Erba annuale alta fino a 1 m con fusto robusto, grandi foglie intere a margine profondamente sinuoso-dentato. I fiori sono grandi, solitari, a corolla bianca lungamente tubolosa, allargata all'apice. Il frutto è una capsula setticida, ricoperta di aculei che si apre longitudinalmente in 4 valve.",
-                drug_active: "La droga è costituita dalle foglie, contengono gli stessi alcaloide della belladonna in quantitativi inferiori, la droga ha azione simile."
-            },
-            {
-                id: 41,
-                scientific: "Lavandula angustifolia",
-                common: "Lavanda",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Fiori in spighe blu-violette. Profumo caratteristico.",
-                characteristics: "Frutici odorosi, densamente cespugliosi con rami legnosi alla base, le foglie sono verde-cenere, fortemente pelose, opposte, strettamente lanceolate, arrotolate sui margini. I fusti fioriferi nudi al di sotto delle infiorescenze portano lunghi spicastri con fiori piccoli, brevemente peduncolati con calice grigio-bluastro e corolla, blu-violetta, bilabiata, con il labbro superiore bifido e l'inferiore trilobato. Gli stami sono 4, il frutto è un tetrachenio costituito da 4 cocchi ovoidi e lisci.",
-                drug_active: "La droga è costituita dalle sommità fiorite per estrarre l'olio essenziale che contiene linalolo, acetato di linalile, terpinen-4-olo. Lavandulolo e acetato di lavandulile. L'olio essenziale di lavanda ha proprietà antibatteriche e può essere utilizzato per uso topico nella cura di piccole piaghe, bruciature, eritema solare ecc.. per la cura del raffreddore e per l'igiene boccale. Per via orale è usato per la cura degli stati neurotonici in particolare per disturbi modesti del sonno."
-            },
-            {
-                id: 42,
-                scientific: "Mentha x piperita",
-                common: "Menta",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Fusto quadrangolare rossastro. Forte odore mentolato.",
-                characteristics: "È un ibrido fra M. spicata L.e M. aquatica L. che presenta robusti stoloni da cui si ergono fusti quuadrangolari, spesso rossi-violacei, che portano foglie semplici, opposte, brevemente picciolate, ovate-oblunghe, acute all'apice, arrotondate alla base, irregolarmente seghettate al margine, glabre e munite nella pagina inferiore di peli corti e rigidi. Le infiorescienze a spicastro, hanno fiori debolmente bilabiati con corolla rossa-violacea.",
-                drug_active: "Le foglie di menta contengono triterpeni, carotenoidi, prodotti fenolici, flavonoidi (flavoni e flavonoli). Il composto più abbondante è il mentolo, seguito da mentone, acetato di mentile, mentofurano, isomentone, pulegone, neomentolo, piperitone e carburi. La droga viene tradizionalmente usata per la cura dei disturbi digestivi, flatulenza, eruttazioni e per facilitare l'eliminazione urinaria e digestiva. Il mentolo ha un'azione decongestionante delle mucose nasali viene usato inoltre come antiprutiginoso."
-            },
-            {
-                id: 43,
-                scientific: "Melissa officinalis",
-                common: "Melissa",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Odore di limone. Foglie rugose.",
-                characteristics: "È una pianta erbacea perenne di 30-80 cm con fusti eretti, ramificati, con foglie opposte, picciolate, ovali a lembo rugoso e margine crenulato. I fiori, raccolti in verticillastri, hanno corolla bianca o maculata di rosa, con tubo ricurvo sporgente. Il tetrachenio è formato da 4 cocchi oblunghi, carenati sulla faccia interna.",
-                drug_active: "La droga è costituita dalle foglie e contiene un piccolo quantitativo di olio essenzale costituito da citrale, citronellale, metileptenone, acetato di geranile, β-cariofillene, germacrene ecc.. nella foglia sono inoltre presenti derivati dell'acido caffeico, dell'aldeide benzoica, acido rosmarinico, flavonoidi (quercitoside, ramnocitrina, glucosidi dell'apigenolo e del luteolo) ed eterosidi di monoterpeni ed alcooli aromatici. L'olio essenziale ha attività antibatterica, antifungina e antispasmodica."
-            },
-            {
-                id: 44,
-                scientific: "Salvia officinalis",
-                common: "Salvia",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Foglie rugose grigio-verdi. Odore aromatico.",
-                characteristics: "Suffrutice a caule quadrangolare, eretto, ramificato di circa 25-80 cm, le foglie sono persistenti, opposte, interne e lanceolate a margine crenulato dentellato, sono bianco-verdastre, colore dovuto agli abbondanti peli di rivestimento, i fiori sono grandi, blu-violacei e sono raggruppati in lassi spicastri terminali. La corolla ha un labbro superiore quasi dritto, l'inferiore è diviso in 3 lobi di cui il mediano è più sviluppato, l'androceo è costituito da 2 stami. La pianta ha un forte odore balsamico ed un sapore aromatico amaro.",
-                drug_active: "La droga è costituita delle foglie che contengono flavonoidi (flavoni derivati dal luteololo e dall'apigenolo), triterpeni derivati dall'ursano e dall'oleanano, diterpeni (carnosolo, rosmanolo, epirosmanolo, acido carnosico ecc..), fenoli come l'acido rosmarinico. L'olio essenziale contiene canfora, cineolo, a- e β- tujone, humulene, a-pinene, canfene, limonene, linalolo libero ed esterificato. La salvia ha proprietà spasmolitiche ed antiossidanti, dovute alla presenza di diterpeni, viene inoltre utilizzata nei disturbi dell'apparato digerente, per lavaggi della bocca e del cavo orale e per ridurre l'eccesso di sudorazione."
-            },
-            {
-                id: 45,
-                scientific: "Rosmarinus officinalis",
-                common: "Rosmarino",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Foglie aghiiformi, pagina inferiore bianca.",
-                characteristics: "È un arbusto cespuglioso, sempreverde ramificato alto 1-2 m con foglie sessili, opposte, strette, intere a bordi fortemente riflessi, di consistenza coriacea, vedi scure nella pagina supeiore, biancastre e tomentose nella pagina inferiore, per la presenza di numerosi peli di rivestimento e ghiandolari. I fiori sono azzurri, e sono disposti all'apice dei rami all'ascella delle foglie.",
-                drug_active: "La droga è costituita dalle foglie e dalle sommità fiorite. L'olio essenziale ha come costituenti principali: canfora, cineolo, a-pinene e borneolo. L'olio ha proprietà spasmolitiche e viene usato nelle gastralgie e disturbi dell'apparato digerente."
-            },
-            {
-                id: 46,
-                scientific: "Thymus vulgaris",
-                common: "Timo",
-                family: "Lamiaceae",
-                order: "Lamiales",
-                desc: "Piccolo arbusto aromatico. Foglie piccolissime.",
-                characteristics: "Pianta perenne suffrufusti eretti, legnosi di 20-30 cm con foglie verde-grigiastro, brevemente picciolate, piccole, lanceolato-lineari, con i margini arrotolati verso la pagina inferiore più o meno pubescenti e tempestate di ghiandole. I fiori sono riuniti in spicastri, sono rosei o bianchi con calice un po' gozzuto, munito di peli duri e corolla piccola, appena più lunga del calice. La pianta ha odore forte, penetrante e sapore aromatico.",
-                drug_active: "La droga è costituita dalle sommità fiorite che contengono un olio a composizione variabile a seconda del chemiotipo. Nella droga sono presenti anche flavonoidi (eterosidi dell'apigenolo, del luteolo, dell'idrossiluteolo, e di vari flavononi). In vitro l'olio ha proprietà antibatteriche ed antifungine, soprattutto quello dei chemiotipi a timolo e carvacrolo. Ha anche proprietà antiossidanti e antispasmodiche. La droga è tradizionalmente usata contro i disturbi digestivi, nel trattamento di tosse e raffreddore e disinfezione di piccole piaghe o ferite."
-            },
-            {
-                id: 47,
-                scientific: "Plantago afra",
-                common: "Psillio",
-                family: "Plantaginaceae",
-                order: "Plantaginales",
-                desc: "Semi usati come lassativo meccanico (mucillagini).",
-                characteristics: "Erba annuale, di modeste dimensioni a fusto dritto, con foglie prive di picciolo, opposte o verticillate. Le infiorescenze sono spighe sottili con brattee brevi. Il frutto è una capsula circumnscissa, contenente 2 semi ovoidi, appiattiti.",
-                drug_active: "La droga è costituita dai semi che contengono lipidi costituiti da acidi grassi insaturi, steroli, proteine, tracce di alcaloidi, ciclopentanopiridinici, un iridoide (aucuboside), zuccheri e mucillaggine la cui idrolisi porta alla formazione di D-xilosio e L-arabinosio, sono presenti anche piccoli quantitativi di a-D-galatturoni-Lxilosio e D-galattosio. Le mucillaggini hanno funzione lassativa di tipo meccanico, inoltre dopo l'assunzione della droga è stata notata una diminuzione dell'iperglicemia post-prandiale ed una modesta azione ipocolesterolemizzante."
-            },
-            {
-                id: 48,
-                scientific: "Digitalis purpurea",
-                common: "Digitale",
-                family: "Scrophulariaceae",
-                order: "Lamiales",
-                desc: "Fiori a ditale porpora maculati. Foglie vellutate.",
-                characteristics: "Pianta erbacea bienne, silicicola che nel primo anno di vita sviluppa una rosetta di foglie basali dalle quali sorge, il secondo anno, un caule peloso, eretto alto circo 50-150 cm che porta grandi foglie alterne irregolarmente dentate o crenate, con la pagina supeirore verde, vellutata e la pagina inferiore tomentosa. I fiori sono riuniti in un racemo unilaterale e sono penduli. La corolla digitata è molto grande, glabra estrnamente e pelosa internamente, il frutto è una capsula ovoidale, tomentosa che porta numerosi piccoli semi ellittici con sottili verruche sulla superficie.",
-                drug_active: "La droga è costituita dalle foglie o da frammenti che contengono flavonoidi, antrachinoni, saponine, eterosidi digitanolici (digitalonina, diginisoide, digifoleina), farmacologicamente non attivi, ma soprattutto degli eterosidi cardiotonici di tipo cardenolidi. Le foglie sono state usate in forme galeniche, quali polvere o tintura e attualmente sono utilizzate per l'estrazione industriale della digitossina."
-            },
-            {
-                id: 49,
-                scientific: "Cinchona succirubra",
-                common: "China",
-                family: "Rubiaceae",
-                order: "Rubiales",
-                desc: "Corteccia rossa. Antimalarico e amaro.",
-                characteristics: "È un albero che raggiunge in natura i 15-20 m, le foglie sono opposte, decussate a nervatura penninervia, spesso rossastra. I fiori sono regolari, pentameri, bianchi o rosati, con corolla gamopetala, coperta di peli bianchi, e sono raggruppati in racemi bianchi di cime terminali. Il frutto è una capsula piccola, ovale di color ruggine a maturità.",
-                drug_active: "La droga è costituita dalla corteccia del tronco e dei rami, la corteccia contiene composti fenolici (cinconaine e proantocianidoli), acidi organici, saponosidi a genina triterpenica e piccole quantità di olio essenziale costituito da 2-esil-3-maleica, a-terpineolo, linalolo, limonene ed altri terpeni. I principali costituenti sono alcaloidi a struttura chinolinica e i più abbondanti sono stereoisomeri: chinina e chinidina ed i loro omologhi demetosilati cinconidina e cinconina. Sono presenti anche piccole quantità di alcaloidi indolici, come la cinconamina che sono preponderanti nelle foglie. La chinina è un antimalarico e ha anche un'azione antipiretica ed analgesica e la chinidina invece è un antifibrillante cardiaco, diminuisce l'eccitabilità, conducibilità e contrattilità del muscolo cardiaco."
-            },
-            {
-                id: 50,
-                scientific: "Cephaelis ipecacuanha",
-                common: "Ipecacuana",
-                family: "Rubiaceae",
-                order: "Rubiales",
-                desc: "Radice inanellata. Emetico ed espettorante.",
-                characteristics: "Arbusti di piccole dimensioni, a fusto quadrangolare con foglie opposte, grandi, brevemente picciolate, ovali a margine ondulatto, verdi- metalliche, glabre superiormente, verdi pallide nella pagina inferiore. I fiori sono riuniti in infiorescenze capoliniformi, hanno corolla bianca infundibuliforme. Il frutto è una drupa ovoidale, nerastra, contenente 2 semi.",
-                drug_active: "La droga è costituita delle radici, i principi attivi presenti sono costituiti da alcaloidi isochinoli, di cui l'emetina il più abbondante, sono inoltre presenti cefelina, psicotrina e metilpsicotrina. Nella radice si riscontra anche una proteina allergizzante, eterosidi isochinoleino-monoterpenici, come l'ipecoside ed una notevole quantità di amido. A dosi deboli i preparati a base di ipeva hanno un'azione espettorante dovuta soprattutto all'emetina, a dosi superiori subentra l'effetto emetico, dovuto anche alla cefelina, a forti dosi l'emetina ha un'azione amebicida."
-            },
-            {
-                id: 51,
-                scientific: "Valeriana officinalis",
-                common: "Valeriana",
-                family: "Valerianaceae",
-                order: "Dipsacales",
-                desc: "Rizoma odore sgradevole. Fiori rosa/bianchi.",
-                characteristics: "Pianta erbacea perenne, dotata di un rizoma dal quale si innalza un fusto aereo, cilindrico, solcato, cavo interamente, glabro che raggiunge il metro di altezza e porta all'apice l'infiorescenza. Le foglie sono opposte, imparipennate costituite da 11-19 foglioline lanceolate, picciolate, ad accezione di quelle situate nella parte superiore del caule. I fiori sono rosei o bianchi e sono riuniti in grandi corimbi composti, ogni fiore presenta un calice piccolo con denti che si trasformano dopo la fecondazione in lunghe setole piumose. Il frutto è un achenio ovale-oblungo, compresso, circondato dai denti del calice trasformati in pappo.",
-                drug_active: "La droga è cotituita dal rizoma che emana un caratteristico odore sgradevole. Le principali sostanze conosciute a cui può essere attribuita l'attività della droga sono sesquiterpenici volatili e non che fanno parte anche dell'olio essenziale e iridoidi, poi abbiamo anche l'olio essenziale che contiene anche monoterpeni: acetato di bornile, acetato di mirtenile, canfene ecc.. gli iridoidi sono presenti in forma non eterosidica, costituiscono un miscuglio in cui valtrato e isovaltrato sono preponderanti, conosciuti con il nome di valepotriati. La valerina ha azione tranquillizzante, sedativa, usata in casi di insonnia non gravi di problemi psicosomatici, di stress, ansia ecc..."
-            },
-            {
-                id: 52,
-                scientific: "Matricaria chamomilla",
-                common: "Camomilla",
-                family: "Asteraceae",
-                order: "Asterales",
-                desc: "Capolini con ricettacolo conico cavo. Fiori bianchi.",
-                characteristics: "Pianta erbacea annuale, aromatica alta 10-30 cm, glabra, con fusto eretto, molto ramificato e radice principale sviluppata. Le foglie sono bipennatosette, a lacinie lineari-setacee, glabre, sono alterne. I capolini sono lungamente peduncolati e muniti di un involucro emisferico di brattee bislunghe. I fiori periferici femminili sono ligulati quelli centrali sono tubolosi. Il frutto è una cipsela molto piccola, subcilindrica, leggermente arcuata.",
-                drug_active: "La droga è costituita dai capolini che contengono mucillagine, cumarine, fenoli, lattoni sesquiterpenici, flavonoidi che sono rappresentati da flavoni in forma eterosidica, presenti nei fiori ligulati, ed inoltre da flavonoli: glucosidi del luteolo ed eterosidi del quercetolo e dell'isoramnetolo. Contiene anche un olio essenziale costituito da camazulene. La camomilla viene comunemente come un blando sedativo, da sperimentazione in vitro, l'azione antifiammatoria può essere attribuita al camazulene ed all'a- bisabololo, mentre l'azione spasmolitica può essere attribuita ai flavonoidi e all'a- bisabololo. Questo composto ha anche un'azione antiulcera gastrica, l'olio essenziale di camomilla ha un'azione antibatterica ed antifungina."
-            },
-            {
-                id: 53,
-                scientific: "Anthemis nobilis",
-                common: "Camomilla romana",
-                family: "Asteraceae",
-                order: "Asterales",
-                desc: "Ricettacolo pieno con pagliette. Più aromatica.",
-                characteristics: "Erba perenne, pubescente, aromatica con caule di 10-40 cm, molto ramificata. Le foglie sono bipennatosette con lacinie brevi, setacee. I capolini emisferici che portano fiori ligulati inseriti su di un ricettacolo conico.",
-                drug_active: "La droga è costituita dai capolini che si distinguono da quelli della matricaria per il ricettacolo pieno, fornito di squamette, per le ghiandole corte, lucenti e gialle, per i lunghi tricomi di rivestimento delle brattee. I capolini contengono lattoni sesquiterpenici del tipi germacranolidi, responsabili del sapore amaro e cumarine, inoltre è presente un olio essenziale costituito prevalentemente da esteri mono e bifunzionali di acidi e alcool alifatici a basso peso molecolare. La pianta viene usata soprattutto come antinfiammatorio."
-            },
-            {
-                id: 54,
-                scientific: "Artemisia annua",
-                common: "Artemisia",
-                family: "Asteraceae",
-                order: "Asterales",
-                desc: "Molto profumata. Antimalarico.",
-                characteristics: "Pianta erbacea annuale, molto profumata, presenta delle grosse pannocchie costituite da capolini globosi ad involucro biancastro. I fiori sono tubolosi che portano numerose ghiandole cintenenti il principio attivo, le foglie sono palmatosette e seccano dopo la fioritura.",
-                drug_active: "La droga è costituita dai fusti e dalle foglie che nel chemiotipo cinese contengono abbondante olio essenziale e in quello vietnamita è scarso e costituito da canfora e germacrene D. sono presenti anche flavonoidi, poliini, cumarine e numerosi lattoni sesquiterpenici: artemisina, acido artemisinico, arteannuina ecc... l'artemisina ha azione antimalarica."
-            },
-            {
-                id: 55,
-                scientific: "Silybum marianum",
-                common: "Cardo mariano",
-                family: "Asteraceae",
-                order: "Asterales",
-                desc: "Foglie venate di bianco con spine. Fiori porpora.",
-                characteristics: "Specie bienne con foglie tipicamente venate di bianco, lungo le nervature e margini dentati provvisti di spine gialle. I capolini hanno base concava ed involucro formato da squame fogliacee, di cui le esterne munite di spine, sono grandi e costituiti da fiori tubulosi, porporini. I frutti sono cipsele compresse, lisce e glabre.",
-                drug_active: "La droga è costituita dalle cipsele che contengono lipidi, proteine, zuccheri, flavonoidi. I prodotti responsabili dell'attività della droga sono un miscuglio di flavonolignani, noti come silimarin che è costituita da silibina silidianina e silicristina. La silimarina ha un'attività antiepatotossica in grado di prevenire danni dovuti a tetracloruro di carbonio, galattosammina, falloidina ecc... avrebbe anche azione di antiradicali liberi e stimolerebbe la sintesi proteica, dovuta a RNA polimerasi, aumentando la capacità di rigenerazione delle cellule epatiche."
-            },
-            {
-                id: 56,
-                scientific: "Colchicum autumnale",
-                common: "Colchico",
-                family: "Liliaceae",
-                order: "Liliales",
-                desc: "Fiori rosa in autunno senza foglie. Bulbo tossico.",
-                characteristics: "Pianta erbacea perenne caratterizzata da un bulbo-tubero dal quale in autunno emergono un gruppo di 1-3 fiori con ovario localizzato al libello del bulbo che successivamente si apre. L'ovario è supero e in primavera spuntano le folie lineari, oblunghe e l'ovario trasformato in frutto poi esce dal terreno e questo contiene numerosi semi.",
-                drug_active: "La droga è costituita dai bulbo-tuberi e dai semi. Il contenuto in alcaloidi della droga è molto variabile, sono stati isolati una ventina di composti alcaloidici, alcuni dei quali in forma eterosidica, il più abbondante e importante è la colchicina. A livello cellulare la colchicina impedisce la formazione del fuso mitotico e blocca la mitosi alla metafase, questa proprietà la rende possibile per uso antitumorale, viene impiegata inoltre per lo studio dei cromosomi, in quanto blocca le divisioni alla metafase ed in campo agronomico per ottenere piante diploidi."
-            },
-            {
-                id: 57,
-                scientific: "Urginea maritima",
-                common: "Scilla",
-                family: "Liliaceae",
-                order: "Liliales",
-                desc: "Bulbo enorme. Cardiotonico.",
-                characteristics: "Pianta erbacea perenne dotata di un bulbo voluminoso, globoso-piriforme dal quale nascono le foglie interne, allungate e lanceolate. Lo scapo infiorescenziale si sviluppa a fine estate quando le foglie sono disseccate. I fiori sono disposti a racemo, hanno il perigonio formato da 6 tepali bianco-verdastri, saldati alla base sono sono inseriti 6 stami, l'ovario è supero. Il frutto è una capsula a 3 logge.",
-                drug_active: "La droga è costituita dalle squame interne del bulbo che contiene fruttani, tannini condensati e flavonoidi, ma essa interessa per il contenuto in eterosidi cardiotonici. Inoltre contiene bufadienolidi i cui costituenti principali sono glucoscillarene A e scillarene A che per idrolisi enzimatica lo scillarene A perde una molecola di glucosio trasformandosi in proscillaridina A che è un cardiotonico attivo per via orale."
-            },
-            {
-                id: 58,
-                scientific: "Allium sativum",
-                common: "Aglio",
-                family: "Amaryllidaceae",
-                order: "Liliales",
-                desc: "Bulbo composto da spicchi. Odore solforato.",
-                characteristics: "Pianta erbacea perenne di 20-50 cm munita di bulbo. Ha foglie lineari, guainanti e porta raramente all'apice del caule cilindrico un'ombrella di fiori bianchi o rosati con perigonio di 6 tepali. I fiori sono poco numerosi e mescolati a bulbilli, sono sterili.",
-                drug_active: "La droga è costituita dal bulbo che contiene zuccheri e saponosidi, ma il costituente principale dell'aglio fresco intatto è un composto solforato, l'alliina. In vitro ha azione antibatterica, antifungina ed antiaggregante piastrinica. Tradizionalmente l'aglio viene usato in caso di iperlipemia, di ipertensione e nei disturbi circolatori minori."
-            },
-            {
-                id: 59,
-                scientific: "Aloe barbadensis",
-                common: "Aloe vera",
-                family: "Aloeaceae",
-                order: "Liliales",
-                desc: "Foglie succulente a rosetta con spine ai margini.",
-                characteristics: "È una pianta carnosa perenne a portamento arbustivo, alta sino ad 1 m, le foglie sono disposte a ciuffo, semplici, lungamente lanceolate e presentano una cuticola molto spessa e presentano spine solo lungo ai lati, lo scapo fiorifero si innalza al centro delle foglie ed è costituito da un'infiorescenza a racemo con asse ingrossato di colore giallo o rosso. I frutti sono costituiti da una capsula loculicida.",
-                drug_active: "La droga è costituita dal succo concentrato ed essiccato delle foglie da dove si può avere il succo d'aloe (che contiene aloina, idrossialoina e una frazione resinosa in cui sono stati identificati aloesina e aloeresina A, il succo ha azione lassativa o purgante a seconda della dose) o il gel che è costituito esclusivamente da cellule e mucillaggine della parte centrale dell foglie seccate. Il gel d'aloe è usato per le sue proprietà cicatrizzanti per scottature, eritema solare, punture ecc..."
-            }
-        ];
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // --- SUPABASE AYARLARI ---
+        const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Veritabanı boş başlıyor, Supabase'den dolacak
+        let plantDatabase = [];
 
         const app = {
-            data: plantDatabase,
+            data: [], // Başlangıçta boş
             mode: 'list',
             currentCardIndex: 0,
             isFlipped: false,
             quizScore: 0,
             quizAnswered: false,
 
-            init() {
+            // Başlatma fonksiyonunu değiştirdik
+            async init() {
+                // Önce lisans kontrolü yap
+                await this.checkLicense();
+            },
+
+            // --- LİSANS VE VERİ ÇEKME İŞLEMLERİ ---
+            async checkLicense() {
+                const savedCode = localStorage.getItem('botanical_license');
+                
+                if (savedCode) {
+                    // Eğer tarayıcıda kod varsa direkt veriyi çekmeye çalış
+                    document.getElementById('login-overlay').style.display = 'none';
+                    this.loadDataFromSupabase();
+                } else {
+                    // Kod yoksa giriş ekranı kalsın
+                    lucide.createIcons(); // İkonları giriş ekranı için yükle
+                }
+            },
+
+            async loadDataFromSupabase() {
+                // Yükleme ekranını göster
+                const loadingScreen = document.getElementById('loading-screen');
+                loadingScreen.style.display = 'flex';
+                loadingScreen.classList.remove('hidden');
+
+                // Supabase'den veriyi çek
+                let { data: plants, error } = await supabase
+                    .from('plants')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) {
+                    console.error('Veri çekme hatası:', error);
+                    alert("Veriler yüklenemedi. Lütfen sayfayı yenileyin.");
+                    return;
+                }
+
+                // Veriyi uygulamaya yükle
+                this.data = plants;
+                plantDatabase = plants; // Global değişkeni de güncelle (uyumluluk için)
+                
+                // Yükleme ekranını kapat
+                loadingScreen.style.display = 'none';
+
+                // Uygulamayı normal şekilde başlat
                 this.renderList();
                 this.updateNav();
                 lucide.createIcons();
                 document.getElementById('fc-total-count').innerText = this.data.length;
             },
 
+            // --- DİĞER FONKSİYONLAR (Aynen kalıyor, sadece getImageUrl güncellendi) ---
             getImageUrl(plant) {
                 const query = encodeURIComponent(plant.scientific + " botanical plant");
                 return `https://tse2.mm.bing.net/th?q=${query}&w=500&h=400&c=7&rs=1&p=0`;
@@ -968,49 +454,50 @@
                 if (newMode === 'quiz') this.initQuiz();
             },
 
-            // --- LIST LOGIC ---
             renderList(filteredData = null) {
                 const dataToRender = filteredData || this.data;
                 const container = document.getElementById('cards-container');
                 
                 if (dataToRender.length === 0) {
-                    container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-400">Nessuna pianta trovata.</div>`;
+                    container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-400">Veri bulunamadı.</div>`;
                     return;
                 }
-
+                // ... (renderList'in geri kalanı orijinal kodundaki ile aynı)
+                // BURAYA ESKİ KODUNDAKİ renderList İÇERİĞİNİ KOPYALA (HTML string literal kısmı)
                 container.innerHTML = dataToRender.map(plant => `
-                    <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
-                        <div class="h-56 overflow-hidden relative bg-gray-100">
-                            <img src="${this.getImageUrl(plant)}" 
-                                 onerror="this.src='https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(plant.scientific)}'"
-                                 alt="${plant.scientific}" 
-                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
-                                <span class="text-white font-bold italic text-lg shadow-black drop-shadow-md">${plant.scientific}</span>
+                        <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
+                            <div class="h-56 overflow-hidden relative bg-gray-100">
+                                <img src="${this.getImageUrl(plant)}" 
+                                    onerror="this.src='https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(plant.scientific)}'"
+                                    alt="${plant.scientific}" 
+                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
+                                    <span class="text-white font-bold italic text-lg shadow-black drop-shadow-md">${plant.scientific}</span>
+                                </div>
+                            </div>
+                            <div class="p-6 flex-1 flex flex-col">
+                                <div class="flex justify-between items-start mb-3">
+                                    <span class="text-emerald-600 font-bold uppercase tracking-wider text-xs bg-emerald-50 px-2 py-1 rounded-md">${plant.common}</span>
+                                    <span class="text-gray-400 text-[10px] border border-gray-200 px-2 py-1 rounded-full">${plant.family}</span>
+                                </div>
+                                
+                                <div class="space-y-3 text-sm text-gray-600 flex-1">
+                                    <p class="leading-relaxed line-clamp-3">${plant.desc}</p>
+                                </div>
+                                
+                                <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                                    <span class="text-xs text-gray-400 font-mono">${plant.order}</span>
+                                    <button onclick="app.openDetails(${plant.id})" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                                        <i data-lucide="info" class="w-4 h-4"></i> Dettagli
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div class="p-6 flex-1 flex flex-col">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="text-emerald-600 font-bold uppercase tracking-wider text-xs bg-emerald-50 px-2 py-1 rounded-md">${plant.common}</span>
-                                <span class="text-gray-400 text-[10px] border border-gray-200 px-2 py-1 rounded-full">${plant.family}</span>
-                            </div>
-                            
-                            <div class="space-y-3 text-sm text-gray-600 flex-1">
-                                <p class="leading-relaxed line-clamp-3">${plant.desc}</p>
-                            </div>
-                            
-                            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                                <span class="text-xs text-gray-400 font-mono">${plant.order}</span>
-                                <button onclick="app.openDetails(${plant.id})" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2">
-                                    <i data-lucide="info" class="w-4 h-4"></i> Dettagli
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                    `).join('');
                 lucide.createIcons();
             },
-
+            
+            // ... (filterList, openDetails, closeDetails, loadFlashcard, flipCard, nextCard, prevCard, initQuiz, loadQuizQuestion, checkQuizAnswer, nextQuizQuestion fonksiyonlarını ESKİ KODUNDAN buraya kopyala. Değişiklik yok.)
             filterList() {
                 const term = document.getElementById('search-input').value.toLowerCase();
                 const filtered = this.data.filter(p => 
@@ -1020,8 +507,6 @@
                 );
                 this.renderList(filtered);
             },
-
-            // --- DETAILS MODAL ---
             openDetails(id) {
                 const plant = this.data.find(p => p.id === id);
                 if (!plant) return;
@@ -1031,34 +516,26 @@
                 document.getElementById('modal-scientific').innerText = plant.scientific;
                 document.getElementById('modal-family').innerText = plant.family;
                 document.getElementById('modal-order').innerText = plant.order || '-';
-                
-                // Fallback se le caratteristiche sono vuote (usiamo la desc breve)
                 document.getElementById('modal-chars').innerText = plant.characteristics || plant.desc;
                 document.getElementById('modal-drug').innerText = plant.drug_active || "Dati non disponibili.";
 
                 const modal = document.getElementById('details-modal');
                 modal.classList.remove('hidden');
-                // Piccola animazione di entrata
                 setTimeout(() => {
                     modal.querySelector('div.bg-white').classList.add('modal-enter-active');
                 }, 10);
-                
-                // Prevent scrolling background
                 document.body.style.overflow = 'hidden';
             },
-
             closeDetails() {
                 const modal = document.getElementById('details-modal');
                 modal.querySelector('div.bg-white').classList.remove('modal-enter-active');
-                
                 setTimeout(() => {
                     modal.classList.add('hidden');
                     document.body.style.overflow = '';
                 }, 200);
             },
-
-            // --- FLASHCARD LOGIC ---
             loadFlashcard() {
+                if (this.data.length === 0) return;
                 const plant = this.data[this.currentCardIndex];
                 const cardInner = document.getElementById('flashcard-inner');
                 
@@ -1068,40 +545,32 @@
                 
                 setTimeout(() => {
                     cardInner.style.transition = 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                    
                     document.getElementById('fc-image').src = this.getImageUrl(plant);
                     document.getElementById('fc-current-idx').innerText = this.currentCardIndex + 1;
-                    
                     document.getElementById('fc-sci-name').innerText = plant.scientific;
                     document.getElementById('fc-common-name').innerText = plant.common;
                     document.getElementById('fc-family').innerText = plant.family;
-                    document.getElementById('fc-desc').innerText = plant.characteristics || plant.desc; // Usa la descrizione lunga
+                    document.getElementById('fc-desc').innerText = plant.characteristics || plant.desc;
                 }, 50);
             },
-
             flipCard() {
                 const cardInner = document.getElementById('flashcard-inner');
                 this.isFlipped = !this.isFlipped;
                 cardInner.classList.toggle('flipped');
             },
-
             nextCard() {
                 this.currentCardIndex = (this.currentCardIndex + 1) % this.data.length;
                 this.loadFlashcard();
             },
-
             prevCard() {
                 this.currentCardIndex = (this.currentCardIndex - 1 + this.data.length) % this.data.length;
                 this.loadFlashcard();
             },
-
-            // --- QUIZ LOGIC ---
             initQuiz() {
                 this.quizScore = 0;
                 document.getElementById('quiz-score').innerText = 0;
-                this.loadQuizQuestion();
+                if(this.data.length > 0) this.loadQuizQuestion();
             },
-
             loadQuizQuestion() {
                 const correctIndex = Math.floor(Math.random() * this.data.length);
                 const correctPlant = this.data[correctIndex];
@@ -1119,7 +588,6 @@
                 this.quizAnswered = false;
 
                 document.getElementById('quiz-image').src = this.getImageUrl(correctPlant);
-                // Use short desc for quiz to make it easier/readable
                 document.getElementById('quiz-hint').innerText = correctPlant.desc; 
                 
                 const nextBtn = document.getElementById('quiz-next-btn');
@@ -1139,7 +607,6 @@
                     </button>
                 `).join('');
             },
-
             checkQuizAnswer(selectedId, btnElement) {
                 if (this.quizAnswered) return;
                 this.quizAnswered = true;
@@ -1170,16 +637,74 @@
                 
                 lucide.createIcons();
             },
-
             nextQuizQuestion() {
                 this.loadQuizQuestion();
             },
-
             updateNav() {
                 lucide.createIcons();
             }
         };
 
+        // --- GLOBAL: KOD DOĞRULAMA FONKSİYONU ---
+        async function verifyCode() {
+            const btn = document.getElementById('login-btn');
+            const errorMsg = document.getElementById('login-error');
+            const input = document.getElementById('access-code');
+            const code = input.value.trim().toUpperCase();
+
+            if (!code) {
+                errorMsg.innerText = "Lütfen bir kod girin.";
+                return;
+            }
+
+            // Butonu kilitle
+            btn.disabled = true;
+            btn.innerText = "Kontrol ediliyor...";
+            errorMsg.innerText = "";
+
+            try {
+                // 1. Kodu kontrol et (Kullanılmamış olmalı)
+                const { data, error } = await supabase
+                    .from('codes')
+                    .select('*')
+                    .eq('code', code)
+                    .single();
+
+                if (error || !data) {
+                    throw new Error("Geçersiz kod.");
+                }
+
+                if (data.is_used) {
+                    throw new Error("Bu kod daha önce başka bir cihazda kullanılmış.");
+                }
+
+                // 2. Kodu "Kullanıldı" olarak işaretle (YAKMA İŞLEMİ)
+                const { error: updateError } = await supabase
+                    .from('codes')
+                    .update({ is_used: true })
+                    .eq('id', data.id);
+
+                if (updateError) throw new Error("Aktivasyon hatası.");
+
+                // 3. Başarılı!
+                localStorage.setItem('botanical_license', code);
+                
+                // Animasyonla giriş yap
+                const overlay = document.getElementById('login-overlay');
+                overlay.classList.add('opacity-0', 'scale-110');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    app.loadDataFromSupabase(); // Verileri çekmeye başla
+                }, 500);
+
+            } catch (err) {
+                errorMsg.innerText = err.message;
+                btn.disabled = false;
+                btn.innerText = "Giriş Yap";
+            }
+        }
+
+        // Uygulamayı Başlat
         document.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
