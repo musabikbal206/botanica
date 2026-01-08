@@ -9,11 +9,8 @@
     <meta name="theme-color" content="#065f46">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
-    <!-- Tailwind CSS per lo stile veloce e responsivo -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Icone Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
 
@@ -96,14 +93,14 @@
             <div class="bg-emerald-100 p-4 rounded-full inline-flex mb-6">
                 <i data-lucide="lock" class="text-emerald-800 w-8 h-8"></i>
             </div>
-            <h2 class="text-2xl font-serif font-bold mb-2">Hoşgeldiniz</h2>
-            <p class="text-emerald-200 text-sm mb-6">İçeriğe erişmek için lütfen erişim kodunuzu girin.</p>
+            <h2 class="text-2xl font-serif font-bold mb-2">Benvenuto</h2>
+            <p class="text-emerald-200 text-sm mb-6">Inserisci il tuo codice di accesso per sbloccare il contenuto.</p>
             
             <input type="text" id="access-code" placeholder="XXXX-XXXX-XXXX" 
                 class="w-full bg-black/20 border border-emerald-500/30 rounded-xl p-4 text-center text-white placeholder-emerald-400/50 outline-none focus:ring-2 focus:ring-emerald-400 mb-4 tracking-widest uppercase font-mono">
             
             <button onclick="verifyCode()" id="login-btn" class="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20">
-                Giriş Yap
+                Accedi
             </button>
             <p id="login-error" class="text-red-300 text-xs mt-4 min-h-[20px] font-bold"></p>
         </div>
@@ -111,10 +108,9 @@
 
     <div id="loading-screen" class="fixed inset-0 z-[90] bg-white hidden flex-col justify-center items-center">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-600 mb-4"></div>
-        <p class="text-emerald-800 font-bold animate-pulse">Bitkiler Yükleniyor...</p>
+        <p class="text-emerald-800 font-bold animate-pulse">Caricamento in corso...</p>
     </div>    
 
-    <!-- Header -->
     <header class="bg-emerald-900 text-white p-4 sticky top-0 z-40 border-b-4 border-emerald-600 shadow-md">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
@@ -141,28 +137,23 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 max-w-6xl mx-auto w-full p-4 md:p-8 relative">
         
-        <!-- MODE: LIST -->
         <div id="view-list" class="view-section block animate-fade-in">
             <div class="text-center mb-10 max-w-2xl mx-auto">
                 <h2 class="text-4xl font-bold text-emerald-950 mb-3 italic">Atlante Botanico</h2>
                 <p class="text-gray-600">Esplora la collezione completa con le nuove schede dettagliate.</p>
             </div>
             
-            <!-- Search Bar -->
             <div class="mb-8 relative max-w-md mx-auto">
                 <input type="text" id="search-input" onkeyup="app.filterList()" placeholder="Cerca una pianta..." class="w-full p-3 pl-10 rounded-full border border-gray-300 shadow-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                 <i data-lucide="search" class="absolute left-3 top-3.5 text-gray-400 w-5 h-5"></i>
             </div>
 
             <div id="cards-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Cards injected via JS -->
-            </div>
+                </div>
         </div>
 
-        <!-- MODE: FLASHCARD -->
         <div id="view-flashcard" class="view-section hidden">
             <div class="flex flex-col items-center justify-center min-h-[60vh] max-w-xl mx-auto">
                 
@@ -174,7 +165,6 @@
                 <div class="perspective-1000 w-full h-[500px] cursor-pointer group mb-8" onclick="app.flipCard()">
                     <div id="flashcard-inner" class="flip-card-inner shadow-2xl rounded-2xl bg-white">
                         
-                        <!-- Front -->
                         <div class="flip-card-front flex flex-col bg-white rounded-2xl border border-gray-200">
                             <div class="h-3/4 w-full bg-gray-100 relative overflow-hidden rounded-t-2xl">
                                 <img id="fc-image" src="" alt="Pianta misteriosa" class="w-full h-full object-cover">
@@ -189,7 +179,6 @@
                             </div>
                         </div>
 
-                        <!-- Back -->
                         <div class="flip-card-back flex flex-col p-8 text-white rounded-2xl shadow-inner border-4 border-emerald-700/50">
                             <div class="flex-1 flex flex-col items-center justify-center text-center overflow-hidden">
                                 <i data-lucide="flower" class="w-12 h-12 text-emerald-300 mb-4 opacity-80"></i>
@@ -212,7 +201,6 @@
                     </div>
                 </div>
 
-                <!-- Controls -->
                 <div class="flex items-center gap-6">
                     <button onclick="app.prevCard()" class="p-4 rounded-full bg-white shadow-lg text-gray-600 hover:text-emerald-600 hover:scale-110 transition-all border border-gray-100">
                         <i data-lucide="arrow-left" class="w-6 h-6"></i>
@@ -227,12 +215,10 @@
             </div>
         </div>
 
-        <!-- MODE: QUIZ -->
         <div id="view-quiz" class="view-section hidden">
             <div class="max-w-3xl mx-auto">
                 <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
                     
-                    <!-- Quiz Header -->
                     <div class="bg-emerald-900 px-6 py-4 text-white flex justify-between items-center">
                         <div class="flex items-center gap-2">
                             <i data-lucide="award" class="w-6 h-6 text-yellow-400"></i>
@@ -243,7 +229,6 @@
                         </div>
                     </div>
 
-                    <!-- Question Area -->
                     <div class="grid grid-cols-1 md:grid-cols-2">
                         <div class="h-64 md:h-auto bg-gray-100 relative group">
                             <img id="quiz-image" src="" alt="Quiz Plant" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
@@ -259,8 +244,7 @@
                             </div>
 
                             <div id="quiz-options" class="space-y-3">
-                                <!-- Options injected via JS -->
-                            </div>
+                                </div>
                             
                             <div class="mt-6 flex justify-end">
                                 <button id="quiz-next-btn" onclick="app.nextQuizQuestion()" disabled 
@@ -276,19 +260,14 @@
 
     </main>
 
-    <!-- DETAILS MODAL -->
     <div id="details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="app.closeDetails()"></div>
         
-        <!-- Modal Content -->
         <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row animate-fade-in">
-            <!-- Close Button -->
             <button onclick="app.closeDetails()" class="absolute top-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all text-gray-600 hover:text-red-500">
                 <i data-lucide="x" class="w-6 h-6"></i>
             </button>
 
-            <!-- Image Section -->
             <div class="w-full md:w-2/5 h-64 md:h-auto bg-gray-100 relative">
                 <img id="modal-img" src="" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
@@ -297,7 +276,6 @@
                 </div>
             </div>
 
-            <!-- Content Section -->
             <div class="w-full md:w-3/5 p-8 overflow-y-auto custom-scrollbar bg-white">
                 <div class="flex flex-wrap gap-2 mb-6">
                     <span id="modal-family" class="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full uppercase tracking-wider">Family</span>
@@ -311,8 +289,7 @@
                             <h3 class="font-bold text-lg uppercase tracking-wide">Caratteristiche Generali</h3>
                         </div>
                         <p id="modal-chars" class="text-gray-600 leading-relaxed text-sm text-justify">
-                            <!-- Descrizione dettagliata -->
-                        </p>
+                            </p>
                     </div>
 
              <div clas="bg-emerald-50 p-6 rounded-2xl border border-emerald-100">
@@ -321,15 +298,13 @@
                             <h3 class="font-bold text-lg uppercase tracking-wide">Droga e Principi Attivi</h3>
                         </div>
                         <p id="modal-drug" class="text-gray-700 leading-relaxed text-sm text-justify">
-                            <!-- Principi attivi dettagliati -->
-                        </p>
+                            </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-emerald-900 text-emerald-400/60 py-8 text-center mt-12 border-t border-emerald-800">
         <p class="text-sm">Seni Seviyorum My Everything, Ti Amo, Ti Luno ❤️</p>
     </footer>
@@ -352,9 +327,6 @@
         }
     </script>
     
-
-    <!-- JAVASCRIPT LOGIC -->
-        // DATI COMPLETI ESTRATTI DAL PDF "TAVOLE BOTANICHE"
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -376,6 +348,14 @@
 
             // Başlatma fonksiyonunu değiştirdik
             async init() {
+                // Enter tuşu dinleyicisi ekle
+                document.getElementById('access-code').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Form submit'i engelle (eğer form içindeyse)
+                        verifyCode();
+                    }
+                });
+
                 // Önce lisans kontrolü yap
                 await this.checkLicense();
             },
@@ -407,8 +387,8 @@
                     .order('id', { ascending: true });
 
                 if (error) {
-                    console.error('Veri çekme hatası:', error);
-                    alert("Veriler yüklenemedi. Lütfen sayfayı yenileyin.");
+                    console.error('Errore durante il caricamento:', error);
+                    alert("Impossibile caricare i dati. Aggiorna la pagina.");
                     return;
                 }
 
@@ -459,11 +439,10 @@
                 const container = document.getElementById('cards-container');
                 
                 if (dataToRender.length === 0) {
-                    container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-400">Veri bulunamadı.</div>`;
+                    container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-400">Nessuna pianta trovata.</div>`;
                     return;
                 }
-                // ... (renderList'in geri kalanı orijinal kodundaki ile aynı)
-                // BURAYA ESKİ KODUNDAKİ renderList İÇERİĞİNİ KOPYALA (HTML string literal kısmı)
+                
                 container.innerHTML = dataToRender.map(plant => `
                         <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
                             <div class="h-56 overflow-hidden relative bg-gray-100">
@@ -497,7 +476,6 @@
                 lucide.createIcons();
             },
             
-            // ... (filterList, openDetails, closeDetails, loadFlashcard, flipCard, nextCard, prevCard, initQuiz, loadQuizQuestion, checkQuizAnswer, nextQuizQuestion fonksiyonlarını ESKİ KODUNDAN buraya kopyala. Değişiklik yok.)
             filterList() {
                 const term = document.getElementById('search-input').value.toLowerCase();
                 const filtered = this.data.filter(p => 
@@ -653,13 +631,13 @@
             const code = input.value.trim().toUpperCase();
 
             if (!code) {
-                errorMsg.innerText = "Lütfen bir kod girin.";
+                errorMsg.innerText = "Inserisci un codice."; // İtalyanca Hata
                 return;
             }
 
             // Butonu kilitle
             btn.disabled = true;
-            btn.innerText = "Kontrol ediliyor...";
+            btn.innerText = "Verifica in corso..."; // Kontrol ediliyor
             errorMsg.innerText = "";
 
             try {
@@ -671,11 +649,11 @@
                     .single();
 
                 if (error || !data) {
-                    throw new Error("Geçersiz kod.");
+                    throw new Error("Codice non valido."); // Geçersiz Kod
                 }
 
                 if (data.is_used) {
-                    throw new Error("Bu kod daha önce başka bir cihazda kullanılmış.");
+                    throw new Error("Questo codice è già stato utilizzato su un altro dispositivo."); // Kod kullanılmış
                 }
 
                 // 2. Kodu "Kullanıldı" olarak işaretle (YAKMA İŞLEMİ)
@@ -684,7 +662,7 @@
                     .update({ is_used: true })
                     .eq('id', data.id);
 
-                if (updateError) throw new Error("Aktivasyon hatası.");
+                if (updateError) throw new Error("Errore di attivazione."); // Aktivasyon hatası
 
                 // 3. Başarılı!
                 localStorage.setItem('botanical_license', code);
@@ -700,7 +678,7 @@
             } catch (err) {
                 errorMsg.innerText = err.message;
                 btn.disabled = false;
-                btn.innerText = "Giriş Yap";
+                btn.innerText = "Accedi"; // Giriş Yap
             }
         }
 
