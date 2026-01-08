@@ -33,6 +33,10 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+
+        
+        .input-correct { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #064e3b !important; }
+        .input-wrong { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
     </style>
 </head>
 <body class="text-gray-800 min-h-screen flex flex-col">
@@ -66,15 +70,18 @@
                     <p class="text-xs text-emerald-300 font-light tracking-widest uppercase">Apprendimento Visivo</p>
                 </div>
             </div>
-            <nav class="flex bg-emerald-800/50 p-1 rounded-xl backdrop-blur-sm border border-emerald-700">
-                <button onclick="app.setMode('list')" id="nav-list" class="nav-btn flex items-center gap-2 px-5 py-2 rounded-lg bg-white text-emerald-900 shadow-sm transition-all font-medium text-sm">
+            <nav class="flex bg-emerald-800/50 p-1 rounded-xl backdrop-blur-sm border border-emerald-700 overflow-x-auto max-w-full">
+                <button onclick="app.setMode('list')" id="nav-list" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-emerald-900 shadow-sm transition-all font-medium text-sm whitespace-nowrap">
                     <i data-lucide="book" class="w-4 h-4"></i> Studio
                 </button>
-                <button onclick="app.setMode('flashcard')" id="nav-flashcard" class="nav-btn flex items-center gap-2 px-5 py-2 rounded-lg text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all font-medium text-sm">
+                <button onclick="app.setMode('flashcard')" id="nav-flashcard" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all font-medium text-sm whitespace-nowrap">
                     <i data-lucide="layers" class="w-4 h-4"></i> Flashcard
                 </button>
-                <button onclick="app.setMode('quiz')" id="nav-quiz" class="nav-btn flex items-center gap-2 px-5 py-2 rounded-lg text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all font-medium text-sm">
+                <button onclick="app.setMode('quiz')" id="nav-quiz" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all font-medium text-sm whitespace-nowrap">
                     <i data-lucide="check-circle" class="w-4 h-4"></i> Quiz
+                </button>
+                <button onclick="app.setMode('write')" id="nav-write" class="nav-btn flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-100 hover:bg-emerald-700 hover:text-white transition-all font-medium text-sm whitespace-nowrap">
+                    <i data-lucide="pen-tool" class="w-4 h-4"></i> Scrittura
                 </button>
             </nav>
         </div>
@@ -149,6 +156,51 @@
                 </div>
             </div>
         </div>
+
+        <div id="view-write" class="view-section hidden">
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                    <div class="bg-emerald-900 px-6 py-4 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-2"><i data-lucide="pen-tool" class="w-6 h-6 text-yellow-400"></i><span class="font-bold text-lg">Punti: <span id="write-score" class="text-yellow-400">0</span></span></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2">
+                        <div class="h-64 md:h-auto bg-gray-100 relative group">
+                            <img id="write-image" src="" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                                <p class="text-white text-xs opacity-75">Osserva attentamente la pianta...</p>
+                            </div>
+                        </div>
+                        <div class="p-6 md:p-8 flex flex-col justify-center bg-emerald-50/50">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2 leading-snug">Identifica la pianta</h3>
+                            <p class="text-sm text-gray-500 mb-6">Digita il nome scientifico e la famiglia.</p>
+                            
+                            <div class="space-y-4 mb-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Nome Scientifico</label>
+                                    <input type="text" id="input-scientific" onkeypress="app.handleWriteEnter(event)" class="w-full p-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all font-serif italic" placeholder="Es. Monstera deliciosa" autocomplete="off">
+                                    <p id="feedback-scientific" class="text-xs mt-1 hidden font-bold"></p>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">Famiglia</label>
+                                    <input type="text" id="input-family" onkeypress="app.handleWriteEnter(event)" class="w-full p-3 rounded-xl border border-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all" placeholder="Es. Araceae" autocomplete="off">
+                                    <p id="feedback-family" class="text-xs mt-1 hidden font-bold"></p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <button id="write-check-btn" onclick="app.checkWrite()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-600/20 transition-all flex justify-center items-center gap-2">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Controlla
+                                </button>
+                                <button id="write-next-btn" onclick="app.nextWriteQuestion()" disabled class="flex-1 bg-gray-200 text-gray-400 py-3 rounded-xl font-bold transition-all cursor-not-allowed opacity-50 flex justify-center items-center gap-2">
+                                    Prossima <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <div id="details-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
@@ -182,11 +234,9 @@
     </div>
 
     <script>
-        // İSİM DEĞİŞTİRİLDİ: _supabase kullanıyoruz ki çakışma olmasın.
         const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
-        
-        // ÖNEMLİ: Değişken adı '_supabase' yapıldı.
+       
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         const app = {
@@ -194,8 +244,16 @@
             mode: 'list',
             currentCardIndex: 0,
             isFlipped: false,
+            
+        
             quizScore: 0,
             quizAnswered: false,
+            correctAnswerId: null,
+
+            
+            writeScore: 0,
+            writeAnswered: false,
+            currentWriteItem: null,
 
             init() {
                 const codeInput = document.getElementById('access-code');
@@ -234,7 +292,6 @@
                 errorMsg.innerText = "";
 
                 try {
-                    // ÖNEMLİ: Burada da _supabase kullanılıyor
                     const { data: response, error } = await _supabase.rpc('verify_and_get_plants', { license_code: code });
 
                     if (error) throw error;
@@ -294,6 +351,7 @@
 
                 if (newMode === 'flashcard') this.loadFlashcard();
                 if (newMode === 'quiz') this.initQuiz();
+                if (newMode === 'write') this.initWrite();
             },
 
             renderList(filteredData = null) {
@@ -303,21 +361,38 @@
                 
                 container.innerHTML = list.map(plant => `
                     <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
-                        <div class="h-56 overflow-hidden relative bg-gray-100">
+                        <div class="h-64 overflow-hidden relative bg-gray-100">
                             <img src="${this.getImageUrl(plant)}" onerror="this.src='https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(plant.scientific)}'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 pt-12">
-                                <span class="text-white font-bold italic text-lg shadow-black drop-shadow-md">${plant.scientific}</span>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16">
+                                <span class="text-[10px] text-emerald-200 font-bold uppercase tracking-widest block mb-1 opacity-80">Nome Scientifico</span>
+                                <span class="text-white font-serif italic text-2xl font-bold leading-none shadow-black drop-shadow-md block">${plant.scientific}</span>
                             </div>
                         </div>
-                        <div class="p-6 flex-1 flex flex-col">
-                            <div class="flex justify-between items-start mb-3">
-                                <span class="text-emerald-600 font-bold uppercase tracking-wider text-xs bg-emerald-50 px-2 py-1 rounded-md">${plant.common}</span>
-                                <span class="text-gray-400 text-[10px] border border-gray-200 px-2 py-1 rounded-full">${plant.family}</span>
+                        <div class="p-5 flex-1 flex flex-col gap-4">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Italiano</span>
+                                <span class="text-lg font-medium text-emerald-800 border-b border-emerald-100 pb-1 block w-full">${plant.common}</span>
                             </div>
-                            <div class="space-y-3 text-sm text-gray-600 flex-1"><p class="leading-relaxed line-clamp-3">${plant.desc}</p></div>
-                            <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                                <span class="text-xs text-gray-400 font-mono">${plant.order}</span>
-                                <button onclick="app.openDetails(${plant.id})" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Dettagli</button>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-emerald-50/80 p-3 rounded-lg border border-emerald-100">
+                                    <span class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block mb-1">Famiglia</span>
+                                    <span class="text-sm font-bold text-emerald-900 block truncate" title="${plant.family}">${plant.family}</span>
+                                </div>
+                                <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                    <span class="text-[10px] uppercase font-bold text-blue-400 tracking-wider block mb-1">Ordine</span>
+                                    <span class="text-sm font-medium text-blue-800 block truncate" title="${plant.order}">${plant.order}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex-1">
+                                <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed">${plant.desc}</p>
+                            </div>
+
+                            <div class="mt-auto pt-2">
+                                <button onclick="app.openDetails(${plant.id})" class="w-full py-2 bg-white border border-emerald-200 text-emerald-700 text-sm font-bold rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2 group-hover:border-emerald-500 group-hover:text-emerald-800">
+                                    <i data-lucide="info" class="w-4 h-4"></i> Scheda Completa
+                                </button>
                             </div>
                         </div>
                     </div>`).join('');
@@ -378,6 +453,7 @@
             nextCard() { this.currentCardIndex = (this.currentCardIndex + 1) % this.data.length; this.loadFlashcard(); },
             prevCard() { this.currentCardIndex = (this.currentCardIndex - 1 + this.data.length) % this.data.length; this.loadFlashcard(); },
 
+            
             initQuiz() {
                 this.quizScore = 0; document.getElementById('quiz-score').innerText = 0;
                 if(this.data.length > 0) this.loadQuizQuestion();
@@ -426,6 +502,120 @@
                 lucide.createIcons();
             },
             nextQuizQuestion() { this.loadQuizQuestion(); },
+
+        
+            initWrite() {
+                
+                if(!this.writeScore) this.writeScore = 0; 
+                document.getElementById('write-score').innerText = this.writeScore;
+                if(this.data.length > 0) this.loadWriteQuestion();
+            },
+
+            loadWriteQuestion() {
+                this.writeAnswered = false;
+                this.currentWriteItem = this.data[Math.floor(Math.random() * this.data.length)];
+                
+                
+                document.getElementById('write-image').src = this.getImageUrl(this.currentWriteItem);
+                
+                const sciInput = document.getElementById('input-scientific');
+                const famInput = document.getElementById('input-family');
+                
+                sciInput.value = '';
+                famInput.value = '';
+                sciInput.disabled = false;
+                famInput.disabled = false;
+                
+                sciInput.classList.remove('input-correct', 'input-wrong');
+                famInput.classList.remove('input-correct', 'input-wrong');
+                
+                document.getElementById('feedback-scientific').classList.add('hidden');
+                document.getElementById('feedback-family').classList.add('hidden');
+                
+                const nextBtn = document.getElementById('write-next-btn');
+                const checkBtn = document.getElementById('write-check-btn');
+                
+                nextBtn.disabled = true; 
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                nextBtn.classList.remove('bg-emerald-600', 'text-white');
+                nextBtn.classList.add('bg-gray-200', 'text-gray-400');
+
+                checkBtn.disabled = false;
+                checkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                sciInput.focus();
+            },
+
+            checkWrite() {
+                if(this.writeAnswered) return;
+                
+                const sciInput = document.getElementById('input-scientific');
+                const famInput = document.getElementById('input-family');
+                const sciVal = sciInput.value.trim().toLowerCase();
+                const famVal = famInput.value.trim().toLowerCase();
+                
+                
+                const correctSci = this.currentWriteItem.scientific;
+                const correctFam = this.currentWriteItem.family;
+                
+                let isSciCorrect = sciVal === correctSci.toLowerCase();
+                let isFamCorrect = famVal === correctFam.toLowerCase();
+                
+            
+                const fbSci = document.getElementById('feedback-scientific');
+                if(isSciCorrect) {
+                    sciInput.classList.add('input-correct');
+                    fbSci.innerHTML = `<span class="text-emerald-600">Corretto!</span>`;
+                    fbSci.classList.remove('hidden');
+                } else {
+                    sciInput.classList.add('input-wrong');
+                    fbSci.innerHTML = `<span class="text-red-600">Sbagliato. Era: ${correctSci}</span>`;
+                    fbSci.classList.remove('hidden');
+                }
+
+                
+                const fbFam = document.getElementById('feedback-family');
+                if(isFamCorrect) {
+                    famInput.classList.add('input-correct');
+                    fbFam.innerHTML = `<span class="text-emerald-600">Corretto!</span>`;
+                    fbFam.classList.remove('hidden');
+                } else {
+                    famInput.classList.add('input-wrong');
+                    fbFam.innerHTML = `<span class="text-red-600">Sbagliato. Era: ${correctFam}</span>`;
+                    fbFam.classList.remove('hidden');
+                }
+
+                if(isSciCorrect && isFamCorrect) {
+                    this.writeScore++;
+                    document.getElementById('write-score').innerText = this.writeScore;
+                }
+
+                this.writeAnswered = true;
+                document.getElementById('write-check-btn').disabled = true;
+                document.getElementById('write-check-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                
+                const nextBtn = document.getElementById('write-next-btn');
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-400');
+                nextBtn.classList.add('bg-emerald-600', 'text-white');
+                
+                lucide.createIcons();
+            },
+            
+            handleWriteEnter(e) {
+                if(e.key === 'Enter') {
+                    if(document.getElementById('input-scientific').value && document.getElementById('input-family').value) {
+                         this.checkWrite();
+                    } else if (e.target.id === 'input-scientific') {
+                         document.getElementById('input-family').focus();
+                    }
+                }
+            },
+
+            nextWriteQuestion() {
+                this.loadWriteQuestion();
+            },
+
             updateNav() { lucide.createIcons(); }
         };
 
@@ -433,3 +623,6 @@
     </script>
 </body>
 </html>
+
+
+
