@@ -234,6 +234,24 @@
     </div>
 
     <script>
+        document.addEventListener("contextmenu", function(event){
+        event.preventDefault();
+        });
+        
+        document.onkeydown = function(e) {
+            if (
+                (e.ctrlKey && e.keyCode === 85) || // Ctrl + U
+                (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl + Shift + I
+                (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl + Shift + J
+                (e.keyCode === 123) // F12
+            ) {
+                e.preventDefault(); // Crucial: This stops the browser's default action
+                return false;
+            }
+        }
+    </script>    
+
+    <script>
         const supabaseUrl = 'https://jtteijksmbnrusuxcqpr.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0dGVpamtzbWJucnVzdXhjcXByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc4NTY3MzksImV4cCI6MjA4MzQzMjczOX0.G45LviGhEgqTR5TjE4v3TIWX4WRP4sWeQ6HLF6Ist_0';
        
