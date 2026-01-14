@@ -486,6 +486,7 @@
                 this.quizScore = 0; document.getElementById('quiz-score').innerText = 0;
                 if(this.data.length > 0) this.loadQuizQuestion();
             },
+            
             loadQuizQuestion() {
                 const correct = this.data[Math.floor(Math.random() * this.data.length)];
                 let opts = [correct];
@@ -496,18 +497,25 @@
                 opts.sort(() => Math.random() - 0.5);
                 this.correctAnswerId = correct.id;
                 this.quizAnswered = false;
+                
+                // Set images and text
                 document.getElementById('quiz-image').src = this.getImageUrl(correct);
-                document.getElementById('quiz-common-display').innerText = correct.common;
+                document.getElementById('quiz-common-display').innerText = correct.common; // The big question title
                 document.getElementById('quiz-hint').innerText = correct.desc;
+                
                 const nextBtn = document.getElementById('quiz-next-btn');
                 nextBtn.disabled = true; nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
+                // Render options (REMOVED ${o.common} from the span below)
                 document.getElementById('quiz-options').innerHTML = opts.map(o => `
                     <button onclick="app.checkQuiz(${o.id}, this)" class="quiz-btn w-full p-4 rounded-xl border-2 border-emerald-50 bg-white text-left hover:bg-emerald-50 transition-all flex justify-between items-center group">
-                        <div><span class="font-bold italic text-gray-700 block text-lg group-hover:text-emerald-800">${o.scientific}</span><span class="text-xs text-gray-400 uppercase tracking-wider group-hover:text-emerald-600">${o.common}</span></div>
+                        <div>
+                            <span class="font-bold italic text-gray-700 block text-lg group-hover:text-emerald-800">${o.scientific}</span>
+                        </div>
                         <div class="result-icon"></div>
                     </button>`).join('');
             },
+            
             checkQuiz(id, btn) {
                 if (this.quizAnswered) return;
                 this.quizAnswered = true;
