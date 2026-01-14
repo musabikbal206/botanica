@@ -287,10 +287,9 @@
             },
         
             async fetchData() {
-                // Show loading state if you want, or just wait
                 try {
-                    // Replace 'plants' with your actual table name if different
-                    const { data, error } = await supabase
+                    // BURAYI GÜNCELLEYİN: 'supabase' yerine 'db' kullanın
+                    const { data, error } = await db
                         .from('plants')
                         .select('*')
                         .order('scientific', { ascending: true });
@@ -304,7 +303,8 @@
                     }
                 } catch (err) {
                     console.error('Error fetching data:', err);
-                    alert('Errore nel caricamento dei dati. Controlla la console.');
+                    // Hata detayını görmek için bunu açabilirsiniz
+                    alert('Veri yüklenemedi: ' + err.message); 
                 }
             },
         
