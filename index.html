@@ -110,7 +110,7 @@
                     <div id="flashcard-inner" class="flip-card-inner shadow-2xl rounded-2xl bg-white">
                         <div class="flip-card-front flex flex-col bg-white rounded-2xl border border-gray-200">
                             <div class="h-3/4 w-full bg-gray-100 relative overflow-hidden rounded-t-2xl">
-                                <img id="fc-image" src="" class="w-full h-full object-cover">
+                                <img id="fc-image" src="" class="w-full h-full object-contain bg-white">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
                             </div>
                             <div class="flex-1 p-6 flex flex-col items-center justify-center">
@@ -145,7 +145,7 @@
                         <div class="flex items-center gap-2"><i data-lucide="award" class="w-6 h-6 text-yellow-400"></i><span class="font-bold text-lg">Punti: <span id="quiz-score" class="text-yellow-400">0</span></span></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2">
-                        <div class="h-64 md:h-auto bg-gray-100 relative group"><img id="quiz-image" src="" class="w-full h-full object-cover"></div>
+                        <div class="h-64 md:h-auto bg-gray-100 relative group"><img id="quiz-image" src="" class="w-full h-full object-contain bg-white">
                         <div class="p-6 md:p-8 flex flex-col justify-center bg-emerald-50/50">
                             <h3 class="text-xl font-bold text-gray-800 mb-6 leading-snug">Quale pianta corrisponde?</h3>
                             <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-100 mb-6 relative"><p id="quiz-hint" class="text-gray-600 italic text-sm pl-4 relative z-10 line-clamp-4">...</p></div>
@@ -165,7 +165,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2">
                         <div class="h-64 md:h-auto bg-gray-100 relative group">
-                            <img id="write-image" src="" class="w-full h-full object-cover">
+                            <img id="write-image" src="" class="w-full h-full object-contain bg-white">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                                 <p class="text-white text-xs opacity-75">Osserva attentamente la pianta...</p>
                             </div>
@@ -208,7 +208,7 @@
         <div class="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col md:flex-row animate-fade-in">
             <button onclick="app.closeDetails()" class="absolute top-4 right-4 z-20 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg text-gray-600 hover:text-red-500"><i data-lucide="x" class="w-6 h-6"></i></button>
             <div class="w-full md:w-2/5 h-64 md:h-auto bg-gray-100 relative">
-                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <img id="modal-img" src="" class="w-full h-full object-contain bg-white">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
                     <span id="modal-common" class="text-emerald-300 font-bold uppercase tracking-widest text-sm mb-1"></span>
                     <h2 id="modal-scientific" class="text-white text-3xl font-serif italic font-bold leading-tight"></h2>
@@ -382,7 +382,7 @@
                 container.innerHTML = list.map(plant => `
                     <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
                         <div class="h-64 overflow-hidden relative bg-gray-100">
-                            <img src="${this.getImageUrl(plant)}" onerror="this.src='https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(plant.scientific)}'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            <img src="${this.getImageUrl(plant)}" onerror="this.src='images/default.jpg'" class="w-full h-full object-contain bg-white transition-transform duration-700 group-hover:scale-105">
                             <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16">
                                 <span class="text-[10px] text-emerald-200 font-bold uppercase tracking-widest block mb-1 opacity-80">Nome Scientifico</span>
                                 <span class="text-white font-serif italic text-2xl font-bold leading-none shadow-black drop-shadow-md block">${plant.scientific}</span>
@@ -643,6 +643,3 @@
     </script>
 </body>
 </html>
-
-
-
