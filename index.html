@@ -277,24 +277,23 @@
                 if (e.key === 'Enter') app.handleLogin();
             });
 
-            // 1. Durum: Daha önce giriş yapılmış mı kontrol et (Sayfa yenilendiğinde kod yanmasın diye)
+            // Hafızadaki veriyi kontrol et
             const savedData = localStorage.getItem('botanical_data');
             if (savedData) {
                 try {
                     this.data = JSON.parse(savedData);
                     if (this.data.length > 0) {
-                        console.log("Veriler hafızadan yüklendi:", this.data.length);
+                        console.log("Hafızadan yüklenen veri sayısı:", this.data.length);
                         this.renderList(this.data);
                         this.hideLoginOverlay();
                     }
                 } catch (e) {
-                    console.error("Kayıtlı veri hatası", e);
                     localStorage.removeItem('botanical_data');
                 }
             }
         },
 
-        // --- GİRİŞ VE VERİ ÇEKME (RPC KULLANIMI) ---
+        // --- GİRİŞ VE VERİ ÇEKME ---
         async handleLogin() {
             const codeInput = document.getElementById('access-code');
             const code = codeInput.value.trim();
@@ -302,25 +301,22 @@
             const loginBtn = document.getElementById('login-btn');
 
             if (!code) {
-                errorMsg.innerText = "Lütfen bir kod girin.";
+                errorMsg.innerText = "Lütfen kod girin.";
                 return;
             }
 
-            // Butonu yükleniyor yap
             loginBtn.disabled = true;
-            loginBtn.innerText = "Kontrol ediliyor...";
+            loginBtn.innerText = "Yükleniyor...";
             errorMsg.innerText = "";
 
             try {
-                // Sizin yazdığınız SQL Fonksiyonunu (RPC) çağırıyoruz
+                // RPC Çağrısı
                 const { data: rpcResponse, error } = await db.rpc('verify_and_get_plants', { 
                     license_code: code 
                 });
 
                 if (error) throw error;
 
-                // Fonksiyon json döndürüyor: { success: true/false, message: '...', data: [...] }
-                // Supabase bazen bunu direkt obje olarak, bazen string olarak döndürebilir, kontrol edelim.
                 const result = (typeof rpcResponse === 'string') ? JSON.parse(rpcResponse) : rpcResponse;
 
                 if (result.success === false) {
@@ -328,23 +324,32 @@
                     loginBtn.disabled = false;
                     loginBtn.innerText = "Accedi";
                 } else {
-                    // BAŞARILI!
-                    // Veritabanı sütunlarını UI'ın beklediği formata çevirelim
+                    // BAŞARILI
                     const rawPlants = result.data;
                     
-                    // Veriyi formatla (Sizin tablo -> Bizim UI)
-                    this.data = rawPlants.map(p => ({
-                        id: p.id,
-                        scientific: p.scientific,
-                        common: p.common,
-                        family: p.family,
-                        order: p.order, // order rezerve kelimeydi, tırnakla gelmiş olabilir
-                        description: p.desc || p.characteristics, // 'desc' sütununu description'a ata
-                        drug: p.drug_active, // 'drug_active' sütununu drug'a ata
-                        image_url: null // Resim URL'si yoksa GitHub klasöründen bakacak
-                    }));
+                    // --- DEBUG İÇİN KONSOLA YAZDIRMA ---
+                    console.log("Supabase'den gelen İLK ham veri:", rawPlants[0]);
 
-                    // Veriyi kaydet (localStorage)
+                    // Veri Dönüştürme (Mapping)
+                    this.data = rawPlants.map(p => {
+                        // Burada veritabanı sütun isimlerini kontrol ediyoruz
+                        // p.desc veya p.characteristics dolu mu bakıyoruz
+                        const descText = p.desc || p.characteristics || "Açıklama bulunamadı.";
+                        const drugText = p.drug_active || p.drug || "Etken madde bilgisi yok.";
+
+                        return {
+                            id: p.id,
+                            scientific: p.scientific || "İsimsiz",
+                            common: p.common || "",
+                            family: p.family || "",
+                            order: p.order || "",
+                            description: descText,
+                            drug: drugText,
+                            image_url: null 
+                        };
+                    });
+
+                    // Hafızaya kaydet
                     localStorage.setItem('botanical_data', JSON.stringify(this.data));
                     localStorage.setItem('botanical_access', 'true');
 
@@ -354,7 +359,7 @@
 
             } catch (err) {
                 console.error('Login Hatası:', err);
-                errorMsg.innerText = "Sistem hatası: " + err.message;
+                errorMsg.innerText = "Hata: " + err.message;
                 loginBtn.disabled = false;
                 loginBtn.innerText = "Accedi";
             }
@@ -366,10 +371,10 @@
             setTimeout(() => overlay.classList.add('hidden'), 500);
         },
 
-        // --- RESİM KAYNAĞI AYARI ---
         getImageSrc(plant) {
-            // Sizin tablonuzda resim URL'si yoksa yerel klasörden alır
-            const filename = plant.scientific.replace(/ /g, '_') + '.jpg';
+            // Resim dosya adı oluşturma: "Pinus sylvestris" -> "Pinus_sylvestris.jpg"
+            if (!plant.scientific) return '';
+            const filename = plant.scientific.trim().replace(/ /g, '_') + '.jpg';
             return `images/${filename}`;
         },
 
@@ -391,27 +396,27 @@
             if (mode === 'write' && this.data.length > 0) this.loadWriteQuestion();
         },
 
-        // --- LİSTE MODU ---
+        // --- LİSTE GÖRÜNÜMÜ ---
         renderList(items) {
             const container = document.getElementById('cards-container');
             if (!items || items.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Veri bulunamadı.</p>';
+                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Veri yok.</p>';
                 return;
             }
 
             container.innerHTML = items.map(plant => `
                 <div onclick="app.openDetails(${plant.id})" class="bg-white rounded-2xl p-0 card-shadow cursor-pointer group overflow-hidden border border-emerald-50">
-                    <div class="h-48 overflow-hidden bg-gray-100 relative">
-                        <img src="${this.getImageSrc(plant)}" onerror="this.src='https://placehold.co/600x400?text=${plant.scientific.substring(0,3)}'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                            <span class="text-white font-bold text-lg italic font-serif">${plant.scientific}</span>
-                        </div>
+                    <div class="h-64 overflow-hidden bg-white relative p-2">
+                        <img src="${this.getImageSrc(plant)}" 
+                             onerror="this.src='https://placehold.co/600x400?text=${plant.scientific.substring(0,3)}'" 
+                             class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500">
                     </div>
-                    <div class="p-5">
+                    <div class="p-5 border-t border-gray-100">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded-md">${plant.family}</span>
                         </div>
-                        <h3 class="text-gray-600 font-bold mb-1">${plant.common}</h3>
+                        <h3 class="text-gray-800 font-bold mb-1 italic font-serif text-lg">${plant.scientific}</h3>
+                        <p class="text-gray-500 text-sm font-medium mb-2">${plant.common}</p>
                         <p class="text-gray-400 text-xs line-clamp-2">${plant.description}</p>
                     </div>
                 </div>
@@ -434,6 +439,8 @@
             if(!p) return;
             
             document.getElementById('modal-img').src = this.getImageSrc(p);
+            // Modal içindeki resmi de sığdırıyoruz
+            document.getElementById('modal-img').className = "w-full h-full object-contain bg-white"; 
             
             document.getElementById('modal-scientific').innerText = p.scientific;
             document.getElementById('modal-common').innerText = p.common;
@@ -449,7 +456,7 @@
             document.getElementById('details-modal').classList.add('hidden');
         },
 
-        // --- FLASHCARD MODU ---
+        // --- FLASHCARD ---
         loadCard(idx) {
             if (this.data.length === 0) return;
             this.currentCardIdx = idx;
@@ -462,7 +469,10 @@
             document.getElementById('fc-total-count').innerText = this.data.length;
 
             setTimeout(() => {
-                document.getElementById('fc-image').src = this.getImageSrc(p);
+                const imgEl = document.getElementById('fc-image');
+                imgEl.src = this.getImageSrc(p);
+                // Flashcard resmi için sığdırma
+                imgEl.className = "w-full h-full object-contain bg-white p-4";
                 
                 document.getElementById('fc-sci-name').innerText = p.scientific;
                 document.getElementById('fc-common-name').innerText = p.common;
@@ -488,7 +498,7 @@
             this.loadCard(prev);
         },
 
-        // --- QUIZ MODU ---
+        // --- QUIZ ---
         loadQuizQuestion() {
             if (this.data.length < 4) return;
             this.quizAnswered = false;
@@ -506,7 +516,10 @@
             }
             options.sort(() => Math.random() - 0.5);
 
-            document.getElementById('quiz-image').src = this.getImageSrc(this.currentQuiz);
+            const qImg = document.getElementById('quiz-image');
+            qImg.src = this.getImageSrc(this.currentQuiz);
+            qImg.className = "w-full h-64 object-contain bg-white p-2"; // Quiz resmi sığdırma
+
             document.getElementById('quiz-hint').innerText = this.currentQuiz.description;
             
             const optsContainer = document.getElementById('quiz-options');
@@ -552,7 +565,7 @@
             this.loadQuizQuestion();
         },
 
-        // --- YAZMA (WRITE) MODU ---
+        // --- YAZMA (WRITE) ---
         loadWriteQuestion() {
             if (this.data.length === 0) return;
             this.writeAnswered = false;
@@ -573,7 +586,9 @@
             const idx = Math.floor(Math.random() * this.data.length);
             this.currentWrite = this.data[idx];
 
-            document.getElementById('write-image').src = this.getImageSrc(this.currentWrite);
+            const wImg = document.getElementById('write-image');
+            wImg.src = this.getImageSrc(this.currentWrite);
+            wImg.className = "w-full h-64 object-contain bg-white p-2"; // Yazma resmi sığdırma
         },
 
         checkWrite() {
