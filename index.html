@@ -270,61 +270,107 @@
         writeAnswered: false,
 
         async init() {
-            // Giriş kontrolü
-            if (localStorage.getItem('botanical_access') === 'true') {
-                document.getElementById('login-overlay').classList.add('hidden');
-            }
-            
-            // VERİLERİ ÇEK
-            await this.fetchData();
-            
             lucide.createIcons();
             
             // Enter tuşu dinleyicisi
             document.getElementById('access-code').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') app.manualLogin();
+                if (e.key === 'Enter') app.handleLogin();
             });
+
+            // 1. Durum: Daha önce giriş yapılmış mı kontrol et (Sayfa yenilendiğinde kod yanmasın diye)
+            const savedData = localStorage.getItem('botanical_data');
+            if (savedData) {
+                try {
+                    this.data = JSON.parse(savedData);
+                    if (this.data.length > 0) {
+                        console.log("Veriler hafızadan yüklendi:", this.data.length);
+                        this.renderList(this.data);
+                        this.hideLoginOverlay();
+                    }
+                } catch (e) {
+                    console.error("Kayıtlı veri hatası", e);
+                    localStorage.removeItem('botanical_data');
+                }
+            }
         },
 
-        async fetchData() {
+        // --- GİRİŞ VE VERİ ÇEKME (RPC KULLANIMI) ---
+        async handleLogin() {
+            const codeInput = document.getElementById('access-code');
+            const code = codeInput.value.trim();
+            const errorMsg = document.getElementById('login-error');
+            const loginBtn = document.getElementById('login-btn');
+
+            if (!code) {
+                errorMsg.innerText = "Lütfen bir kod girin.";
+                return;
+            }
+
+            // Butonu yükleniyor yap
+            loginBtn.disabled = true;
+            loginBtn.innerText = "Kontrol ediliyor...";
+            errorMsg.innerText = "";
+
             try {
-                // Burada artık 'db' değişkenini tanıyacaktır
-                const { data, error } = await db
-                    .from('plants')
-                    .select('*')
-                    .order('scientific', { ascending: true });
+                // Sizin yazdığınız SQL Fonksiyonunu (RPC) çağırıyoruz
+                const { data: rpcResponse, error } = await db.rpc('verify_and_get_plants', { 
+                    license_code: code 
+                });
 
                 if (error) throw error;
 
-                if (data) {
-                    this.data = data;
+                // Fonksiyon json döndürüyor: { success: true/false, message: '...', data: [...] }
+                // Supabase bazen bunu direkt obje olarak, bazen string olarak döndürebilir, kontrol edelim.
+                const result = (typeof rpcResponse === 'string') ? JSON.parse(rpcResponse) : rpcResponse;
+
+                if (result.success === false) {
+                    errorMsg.innerText = result.message || "Geçersiz kod.";
+                    loginBtn.disabled = false;
+                    loginBtn.innerText = "Accedi";
+                } else {
+                    // BAŞARILI!
+                    // Veritabanı sütunlarını UI'ın beklediği formata çevirelim
+                    const rawPlants = result.data;
+                    
+                    // Veriyi formatla (Sizin tablo -> Bizim UI)
+                    this.data = rawPlants.map(p => ({
+                        id: p.id,
+                        scientific: p.scientific,
+                        common: p.common,
+                        family: p.family,
+                        order: p.order, // order rezerve kelimeydi, tırnakla gelmiş olabilir
+                        description: p.desc || p.characteristics, // 'desc' sütununu description'a ata
+                        drug: p.drug_active, // 'drug_active' sütununu drug'a ata
+                        image_url: null // Resim URL'si yoksa GitHub klasöründen bakacak
+                    }));
+
+                    // Veriyi kaydet (localStorage)
+                    localStorage.setItem('botanical_data', JSON.stringify(this.data));
+                    localStorage.setItem('botanical_access', 'true');
+
                     this.renderList(this.data);
-                    console.log("Supabase'den gelen bitki sayısı:", data.length);
+                    this.hideLoginOverlay();
                 }
+
             } catch (err) {
-                console.error('Veri çekme hatası:', err);
-                alert('Veri yüklenemedi: ' + err.message);
+                console.error('Login Hatası:', err);
+                errorMsg.innerText = "Sistem hatası: " + err.message;
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Accedi";
             }
         },
 
-        // --- RESİM KAYNAĞI AYARI (GitHub İçin) ---
+        hideLoginOverlay() {
+            const overlay = document.getElementById('login-overlay');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 500);
+        },
+
+        // --- RESİM KAYNAĞI AYARI ---
         getImageSrc(plant) {
-            // Resimleri projenizin içindeki 'images' klasöründen çeker.
-            // Örnek: "Pinus sylvestris" -> "images/Pinus_sylvestris.jpg"
+            // Sizin tablonuzda resim URL'si yoksa yerel klasörden alır
             const filename = plant.scientific.replace(/ /g, '_') + '.jpg';
             return `images/${filename}`;
-        },
-
-        manualLogin() {
-            const code = document.getElementById('access-code').value.trim();
-            if (code === '1234') {
-                localStorage.setItem('botanical_access', 'true');
-                const overlay = document.getElementById('login-overlay');
-                overlay.classList.add('opacity-0');
-                setTimeout(() => overlay.classList.add('hidden'), 500);
-            } else {
-                document.getElementById('login-error').innerText = "Codice non valido.";
-            }
         },
 
         setMode(mode) {
@@ -349,7 +395,7 @@
         renderList(items) {
             const container = document.getElementById('cards-container');
             if (!items || items.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Yükleniyor veya veri bulunamadı...</p>';
+                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Veri bulunamadı.</p>';
                 return;
             }
 
@@ -506,7 +552,7 @@
             this.loadQuizQuestion();
         },
 
-        // --- SCRITTURA (YAZMA) MODU ---
+        // --- YAZMA (WRITE) MODU ---
         loadWriteQuestion() {
             if (this.data.length === 0) return;
             this.writeAnswered = false;
