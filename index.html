@@ -258,356 +258,316 @@
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         const app = {
-            data: [],
+            data: [], // Starts empty, fills from Supabase
             mode: 'list',
-            currentCardIndex: 0,
-            isFlipped: false,
-            
-        
+            currentCardIdx: 0,
             quizScore: 0,
-            quizAnswered: false,
-            correctAnswerId: null,
-
-            
             writeScore: 0,
+            currentQuiz: null,
+            currentWrite: null,
+            isFlipped: false,
+            quizAnswered: false,
             writeAnswered: false,
-            currentWriteItem: null,
-
-            init() {
-                const codeInput = document.getElementById('access-code');
-                if (codeInput) {
-                    codeInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); app.manualLogin(); }
-                    });
+        
+            async init() {
+                // Check login
+                if (localStorage.getItem('botanical_access') === 'true') {
+                    document.getElementById('login-overlay').classList.add('hidden');
                 }
-
-                const savedData = localStorage.getItem('botanical_data');
-                if (savedData) {
-                    try {
-                        this.data = JSON.parse(savedData);
-                        if (this.data.length > 0) {
-                            document.getElementById('login-overlay').style.display = 'none';
-                            this.launchApp();
-                            return;
-                        }
-                    } catch (e) {
-                        localStorage.removeItem('botanical_data');
-                    }
-                }
-                lucide.createIcons();
-            },
-
-            async manualLogin() {
-                const input = document.getElementById('access-code');
-                const btn = document.getElementById('login-btn');
-                const errorMsg = document.getElementById('login-error');
                 
-                const code = input.value.trim().toUpperCase();
-                if(!code) { errorMsg.innerText = "Inserisci un codice."; return; }
-
-                btn.disabled = true;
-                btn.innerText = "Verifica in corso...";
-                errorMsg.innerText = "";
-
+                // FETCH DATA FROM SUPABASE
+                await this.fetchData();
+                
+                lucide.createIcons();
+                
+                // Input listener
+                document.getElementById('access-code').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') app.manualLogin();
+                });
+            },
+        
+            async fetchData() {
+                // Show loading state if you want, or just wait
                 try {
-                    const { data: response, error } = await _supabase.rpc('verify_and_get_plants', { license_code: code });
-
+                    // Replace 'plants' with your actual table name if different
+                    const { data, error } = await supabase
+                        .from('plants')
+                        .select('*')
+                        .order('scientific', { ascending: true });
+        
                     if (error) throw error;
-                    if (response.success === false) throw new Error(response.message);
-
-                    this.data = response.data;
-                    localStorage.setItem('botanical_data', JSON.stringify(this.data));
-
+        
+                    if (data) {
+                        this.data = data;
+                        this.renderList(this.data);
+                        console.log("Data loaded from Supabase:", data.length, "plants");
+                    }
+                } catch (err) {
+                    console.error('Error fetching data:', err);
+                    alert('Errore nel caricamento dei dati. Controlla la console.');
+                }
+            },
+        
+            // --- HELPER: Get Image Source ---
+            // Uses DB url if present, otherwise generates local path from scientific name
+            getImageSrc(plant) {
+                if (plant.image_url) return plant.image_url;
+                // Fallback: local images folder
+                return `images/${plant.scientific.replace(/ /g, '_')}.jpg`;
+            },
+        
+            manualLogin() {
+                const code = document.getElementById('access-code').value.trim();
+                if (code === '1234') {
+                    localStorage.setItem('botanical_access', 'true');
                     const overlay = document.getElementById('login-overlay');
                     overlay.classList.add('opacity-0');
-                    setTimeout(() => {
-                        overlay.style.display = 'none';
-                        this.launchApp();
-                    }, 500);
-
-                } catch (err) {
-                    console.error(err);
-                    btn.disabled = false;
-                    btn.innerText = "Accedi";
-                    if (err.message.includes("Geçersiz") || err.message.includes("valid") || err.message.includes("Codice non valido")) {
-                        errorMsg.innerText = "Codice non valido.";
-                    } else if (err.message.includes("kullanılmış") || err.message.includes("used") || err.message.includes("utilizzato")) {
-                        errorMsg.innerText = "Questo codice è già stato utilizzato.";
-                    } else {
-                        errorMsg.innerText = "Errore di connessione.";
-                    }
+                    setTimeout(() => overlay.classList.add('hidden'), 500);
+                } else {
+                    document.getElementById('login-error').innerText = "Codice non valido.";
                 }
             },
-
-            launchApp() {
-                this.renderList();
-                this.updateNav();
-                lucide.createIcons();
-                document.getElementById('fc-total-count').innerText = this.data.length;
-            },
-
-            getImageUrl(plant) {
-                const query = encodeURIComponent(plant.scientific + " botanical plant");
-                return `https://tse2.mm.bing.net/th?q=${query}&w=500&h=400&c=7&rs=1&p=0`;
-            },
-
-            setMode(newMode) {
-                this.mode = newMode;
-                document.querySelectorAll('.view-section').forEach(el => { el.classList.add('hidden'); el.classList.remove('block'); });
-                document.getElementById(`view-${newMode}`).classList.remove('hidden');
-                document.getElementById(`view-${newMode}`).classList.add('block');
-                
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('bg-white', 'text-emerald-900', 'shadow-sm');
-                    btn.classList.add('text-emerald-100');
+        
+            setMode(mode) {
+                this.mode = mode;
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.nav-btn').forEach(el => {
+                    el.classList.remove('bg-white', 'text-emerald-900', 'shadow-sm');
+                    el.classList.add('text-emerald-100', 'hover:bg-emerald-700');
                 });
-                const activeBtn = document.getElementById(`nav-${newMode}`);
-                if(activeBtn) {
-                    activeBtn.classList.remove('text-emerald-100');
-                    activeBtn.classList.add('bg-white', 'text-emerald-900', 'shadow-sm');
-                }
-
-                if (newMode === 'flashcard') this.loadFlashcard();
-                if (newMode === 'quiz') this.initQuiz();
-                if (newMode === 'write') this.initWrite();
+        
+                document.getElementById(`view-${mode}`).classList.remove('hidden');
+                const navBtn = document.getElementById(`nav-${mode}`);
+                navBtn.classList.remove('text-emerald-100', 'hover:bg-emerald-700');
+                navBtn.classList.add('bg-white', 'text-emerald-900', 'shadow-sm');
+        
+                if (mode === 'flashcard' && this.data.length > 0) this.loadCard(0);
+                if (mode === 'quiz' && this.data.length > 0) this.loadQuizQuestion();
+                if (mode === 'write' && this.data.length > 0) this.loadWriteQuestion();
             },
-
-            renderList(filteredData = null) {
-                const list = filteredData || this.data;
+        
+            // --- LIST MODE ---
+            renderList(items) {
                 const container = document.getElementById('cards-container');
-                if (list.length === 0) { container.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-400">Nessuna pianta trovata.</div>`; return; }
-                
-                container.innerHTML = list.map(plant => `
-                    <div class="card-shadow bg-white rounded-2xl overflow-hidden border border-emerald-50/50 flex flex-col h-full group">
-                        <div class="h-64 overflow-hidden relative bg-gray-100">
-                            <img src="${this.getImageUrl(plant)}" onerror="this.src='https://placehold.co/600x400/e2e8f0/1e293b?text=${encodeURIComponent(plant.scientific)}'" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5 pt-16">
-                                <span class="text-[10px] text-emerald-200 font-bold uppercase tracking-widest block mb-1 opacity-80">Nome Scientifico</span>
-                                <span class="text-white font-serif italic text-2xl font-bold leading-none shadow-black drop-shadow-md block">${plant.scientific}</span>
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nessuna pianta trovata.</p>';
+                    return;
+                }
+        
+                container.innerHTML = items.map(plant => `
+                    <div onclick="app.openDetails(${plant.id})" class="bg-white rounded-2xl p-0 card-shadow cursor-pointer group overflow-hidden border border-emerald-50">
+                        <div class="h-48 overflow-hidden bg-gray-100 relative">
+                            <img src="${this.getImageSrc(plant)}" onerror="this.src='https://placehold.co/600x400?text=${plant.scientific.substring(0,3)}'" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                                <span class="text-white font-bold text-lg italic font-serif">${plant.scientific}</span>
                             </div>
                         </div>
-                        <div class="p-5 flex-1 flex flex-col gap-4">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider block mb-1">Italiano</span>
-                                <span class="text-lg font-medium text-emerald-800 border-b border-emerald-100 pb-1 block w-full">${plant.common}</span>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded-md">${plant.family}</span>
                             </div>
-                            
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="bg-emerald-50/80 p-3 rounded-lg border border-emerald-100">
-                                    <span class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block mb-1">Famiglia</span>
-                                    <span class="text-sm font-bold text-emerald-900 block truncate" title="${plant.family}">${plant.family}</span>
-                                </div>
-                                <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                                    <span class="text-[10px] uppercase font-bold text-blue-400 tracking-wider block mb-1">Ordine</span>
-                                    <span class="text-sm font-medium text-blue-800 block truncate" title="${plant.order}">${plant.order}</span>
-                                </div>
-                            </div>
-
-                            <div class="flex-1">
-                                <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed">${plant.desc}</p>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                <button onclick="app.openDetails(${plant.id})" class="w-full py-2 bg-white border border-emerald-200 text-emerald-700 text-sm font-bold rounded-lg hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2 group-hover:border-emerald-500 group-hover:text-emerald-800">
-                                    <i data-lucide="info" class="w-4 h-4"></i> Scheda Completa
-                                </button>
-                            </div>
+                            <h3 class="text-gray-600 font-bold mb-1">${plant.common}</h3>
+                            <p class="text-gray-400 text-xs line-clamp-2">${plant.description}</p>
                         </div>
-                    </div>`).join('');
+                    </div>
+                `).join('');
                 lucide.createIcons();
             },
-
+        
             filterList() {
-                const term = document.getElementById('search-input').value.toLowerCase();
-                this.renderList(this.data.filter(p => p.scientific.toLowerCase().includes(term) || p.common.toLowerCase().includes(term)));
+                const query = document.getElementById('search-input').value.toLowerCase();
+                const filtered = this.data.filter(p => 
+                    p.scientific.toLowerCase().includes(query) || 
+                    p.common.toLowerCase().includes(query) ||
+                    p.family.toLowerCase().includes(query)
+                );
+                this.renderList(filtered);
             },
-
+        
             openDetails(id) {
                 const p = this.data.find(x => x.id === id);
-                if (!p) return;
-                document.getElementById('modal-img').src = this.getImageUrl(p);
-                document.getElementById('modal-common').innerText = p.common;
-                document.getElementById('modal-scientific').innerText = p.scientific;
-                document.getElementById('modal-family').innerText = p.family;
-                document.getElementById('modal-chars').innerText = p.characteristics || p.desc;
-                document.getElementById('modal-drug').innerText = p.drug_active || "Dati non disponibili.";
+                if(!p) return;
                 
-                const modal = document.getElementById('details-modal');
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.querySelector('div.bg-white').classList.add('modal-enter-active'), 10);
-                document.body.style.overflow = 'hidden';
+                document.getElementById('modal-img').src = this.getImageSrc(p);
+                
+                document.getElementById('modal-scientific').innerText = p.scientific;
+                document.getElementById('modal-common').innerText = p.common;
+                document.getElementById('modal-family').innerText = p.family;
+                document.getElementById('modal-order').innerText = p.order || '-'; // Handle missing order
+                document.getElementById('modal-chars').innerText = p.description;
+                document.getElementById('modal-drugs').innerText = p.drug;
+                
+                document.getElementById('details-modal').classList.remove('hidden');
             },
-
+        
             closeDetails() {
-                const modal = document.getElementById('details-modal');
-                modal.querySelector('div.bg-white').classList.remove('modal-enter-active');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = '';
-                }, 200);
+                document.getElementById('details-modal').classList.add('hidden');
             },
-
-            loadFlashcard() {
+        
+            // --- FLASHCARD MODE ---
+            loadCard(idx) {
                 if (this.data.length === 0) return;
-                const p = this.data[this.currentCardIndex];
-                const card = document.getElementById('flashcard-inner');
-                card.style.transition = 'none'; card.classList.remove('flipped'); this.isFlipped = false;
+                this.currentCardIdx = idx;
+                const p = this.data[idx];
+                
+                document.getElementById('flashcard-inner').classList.remove('flipped');
+                this.isFlipped = false;
+        
+                document.getElementById('fc-current-idx').innerText = idx + 1;
+                document.getElementById('fc-total-count').innerText = this.data.length;
+        
                 setTimeout(() => {
-                    card.style.transition = 'transform 0.8s';
-                    document.getElementById('fc-image').src = this.getImageUrl(p);
-                    document.getElementById('fc-current-idx').innerText = this.currentCardIndex + 1;
+                    document.getElementById('fc-image').src = this.getImageSrc(p);
+                    
                     document.getElementById('fc-sci-name').innerText = p.scientific;
                     document.getElementById('fc-common-name').innerText = p.common;
                     document.getElementById('fc-family').innerText = p.family;
-                    document.getElementById('fc-desc').innerText = p.characteristics || p.desc;
-                }, 50);
+                    document.getElementById('fc-desc').innerText = p.drug;
+                }, 200);
             },
-
-            flipCard() { 
-                const card = document.getElementById('flashcard-inner'); 
-                this.isFlipped = !this.isFlipped; 
-                card.classList.toggle('flipped'); 
+        
+            flipCard() {
+                this.isFlipped = !this.isFlipped;
+                document.getElementById('flashcard-inner').classList.toggle('flipped', this.isFlipped);
             },
-            nextCard() { this.currentCardIndex = (this.currentCardIndex + 1) % this.data.length; this.loadFlashcard(); },
-            prevCard() { this.currentCardIndex = (this.currentCardIndex - 1 + this.data.length) % this.data.length; this.loadFlashcard(); },
-
-            
-            initQuiz() {
-                this.quizScore = 0; document.getElementById('quiz-score').innerText = 0;
-                if(this.data.length > 0) this.loadQuizQuestion();
+        
+            nextCard() {
+                let next = this.currentCardIdx + 1;
+                if (next >= this.data.length) next = 0;
+                this.loadCard(next);
             },
+        
+            prevCard() {
+                let prev = this.currentCardIdx - 1;
+                if (prev < 0) prev = this.data.length - 1;
+                this.loadCard(prev);
+            },
+        
+            // --- QUIZ MODE ---
             loadQuizQuestion() {
-                const correct = this.data[Math.floor(Math.random() * this.data.length)];
-                let opts = [correct];
-                while(opts.length < 4) {
-                    const rnd = this.data[Math.floor(Math.random() * this.data.length)];
-                    if(!opts.find(x => x.id === rnd.id)) opts.push(rnd);
-                }
-                opts.sort(() => Math.random() - 0.5);
-                this.correctAnswerId = correct.id;
+                if (this.data.length < 4) return; // Need at least 4 plants
                 this.quizAnswered = false;
-                document.getElementById('quiz-image').src = this.getImageUrl(correct);
-                document.getElementById('quiz-hint').innerText = correct.desc;
-                const nextBtn = document.getElementById('quiz-next-btn');
-                nextBtn.disabled = true; nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
-
-                document.getElementById('quiz-options').innerHTML = opts.map(o => `
-                    <button onclick="app.checkQuiz(${o.id}, this)" class="quiz-btn w-full p-4 rounded-xl border-2 border-emerald-50 bg-white text-left hover:bg-emerald-50 transition-all flex justify-between items-center group">
-                        <div><span class="font-bold italic text-gray-700 block text-lg group-hover:text-emerald-800">${o.scientific}</span><span class="text-xs text-gray-400 uppercase tracking-wider group-hover:text-emerald-600">${o.common}</span></div>
-                        <div class="result-icon"></div>
-                    </button>`).join('');
+                document.getElementById('quiz-next-btn').disabled = true;
+                document.getElementById('quiz-next-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('quiz-next-btn').classList.remove('bg-emerald-600', 'text-white', 'shadow-lg');
+        
+                const correctIdx = Math.floor(Math.random() * this.data.length);
+                this.currentQuiz = this.data[correctIdx];
+        
+                let options = [this.currentQuiz];
+                while(options.length < 4) {
+                    const r = this.data[Math.floor(Math.random() * this.data.length)];
+                    if(!options.find(x => x.id === r.id)) options.push(r);
+                }
+                options.sort(() => Math.random() - 0.5);
+        
+                document.getElementById('quiz-image').src = this.getImageSrc(this.currentQuiz);
+                document.getElementById('quiz-hint').innerText = this.currentQuiz.description;
+                
+                const optsContainer = document.getElementById('quiz-options');
+                optsContainer.innerHTML = options.map(opt => `
+                    <button onclick="app.checkQuizAnswer(${opt.id}, this)" class="quiz-option w-full text-left p-4 rounded-xl border border-gray-200 hover:bg-emerald-50 transition-all font-serif italic text-lg flex justify-between items-center group">
+                        <span>${opt.scientific}</span>
+                        <i data-lucide="circle" class="w-5 h-5 text-gray-300 group-hover:text-emerald-500"></i>
+                    </button>
+                `).join('');
+                lucide.createIcons();
             },
-            checkQuiz(id, btn) {
-                if (this.quizAnswered) return;
+        
+            checkQuizAnswer(id, btnElement) {
+                if(this.quizAnswered) return;
                 this.quizAnswered = true;
-                if (id === this.correctAnswerId) {
-                    this.quizScore++;
+        
+                const allBtns = document.querySelectorAll('.quiz-option');
+                const isCorrect = id === this.currentQuiz.id;
+        
+                if (isCorrect) {
+                    btnElement.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-800');
+                    btnElement.innerHTML = `<span>${this.currentQuiz.scientific}</span><i data-lucide="check-circle" class="text-emerald-600 w-6 h-6"></i>`;
+                    this.quizScore += 10;
                     document.getElementById('quiz-score').innerText = this.quizScore;
-                    btn.classList.add('correct');
-                    btn.querySelector('.result-icon').innerHTML = '<i data-lucide="check-circle" class="text-emerald-600 w-6 h-6"></i>';
                 } else {
-                    btn.classList.add('wrong');
-                    btn.querySelector('.result-icon').innerHTML = '<i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i>';
-                    document.querySelectorAll('.quiz-btn').forEach(b => {
-                        if(b.innerHTML.includes(this.data.find(x => x.id === this.correctAnswerId).scientific)) {
-                            b.classList.add('correct');
-                            b.querySelector('.result-icon').innerHTML = '<i data-lucide="check-circle" class="text-emerald-600 w-6 h-6"></i>';
+                    btnElement.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                    btnElement.innerHTML = `<span>${btnElement.innerText}</span><i data-lucide="x-circle" class="text-red-600 w-6 h-6"></i>`;
+                    allBtns.forEach(btn => {
+                        if(btn.innerText.includes(this.currentQuiz.scientific)) {
+                            btn.classList.add('bg-emerald-100', 'border-emerald-500');
                         }
                     });
                 }
-                const next = document.getElementById('quiz-next-btn');
-                next.disabled = false; next.classList.remove('opacity-50', 'cursor-not-allowed');
+                
+                const nextBtn = document.getElementById('quiz-next-btn');
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-400');
+                nextBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-lg');
                 lucide.createIcons();
             },
-            nextQuizQuestion() { this.loadQuizQuestion(); },
-
         
-            initWrite() {
-                
-                if(!this.writeScore) this.writeScore = 0; 
-                document.getElementById('write-score').innerText = this.writeScore;
-                if(this.data.length > 0) this.loadWriteQuestion();
+            nextQuizQuestion() {
+                this.loadQuizQuestion();
             },
-
+        
+            // --- WRITE MODE ---
             loadWriteQuestion() {
+                if (this.data.length === 0) return;
                 this.writeAnswered = false;
-                this.currentWriteItem = this.data[Math.floor(Math.random() * this.data.length)];
-                
-                
-                document.getElementById('write-image').src = this.getImageUrl(this.currentWriteItem);
-                
-                const sciInput = document.getElementById('input-scientific');
-                const famInput = document.getElementById('input-family');
-                
-                sciInput.value = '';
-                famInput.value = '';
-                sciInput.disabled = false;
-                famInput.disabled = false;
-                
-                sciInput.classList.remove('input-correct', 'input-wrong');
-                famInput.classList.remove('input-correct', 'input-wrong');
-                
+                document.getElementById('write-next-btn').disabled = true;
+                document.getElementById('write-next-btn').classList.remove('bg-emerald-600', 'text-white');
+                document.getElementById('write-next-btn').classList.add('bg-gray-200', 'text-gray-400', 'opacity-50', 'cursor-not-allowed');
+        
+                document.getElementById('write-check-btn').disabled = false;
+                document.getElementById('write-check-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+        
+                document.getElementById('input-scientific').value = '';
+                document.getElementById('input-family').value = '';
+                document.getElementById('input-scientific').classList.remove('input-correct', 'input-wrong');
+                document.getElementById('input-family').classList.remove('input-correct', 'input-wrong');
                 document.getElementById('feedback-scientific').classList.add('hidden');
                 document.getElementById('feedback-family').classList.add('hidden');
-                
-                const nextBtn = document.getElementById('write-next-btn');
-                const checkBtn = document.getElementById('write-check-btn');
-                
-                nextBtn.disabled = true; 
-                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                nextBtn.classList.remove('bg-emerald-600', 'text-white');
-                nextBtn.classList.add('bg-gray-200', 'text-gray-400');
-
-                checkBtn.disabled = false;
-                checkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-                sciInput.focus();
+        
+                const idx = Math.floor(Math.random() * this.data.length);
+                this.currentWrite = this.data[idx];
+        
+                document.getElementById('write-image').src = this.getImageSrc(this.currentWrite);
             },
-
+        
             checkWrite() {
                 if(this.writeAnswered) return;
                 
                 const sciInput = document.getElementById('input-scientific');
                 const famInput = document.getElementById('input-family');
+                
                 const sciVal = sciInput.value.trim().toLowerCase();
                 const famVal = famInput.value.trim().toLowerCase();
                 
-                
-                const correctSci = this.currentWriteItem.scientific;
-                const correctFam = this.currentWriteItem.family;
-                
-                let isSciCorrect = sciVal === correctSci.toLowerCase();
-                let isFamCorrect = famVal === correctFam.toLowerCase();
-                
-            
-                const fbSci = document.getElementById('feedback-scientific');
-                if(isSciCorrect) {
+                const isSciCorrect = sciVal === this.currentWrite.scientific.toLowerCase();
+                const isFamCorrect = famVal === this.currentWrite.family.toLowerCase();
+        
+                // Scientific Feedback
+                if (isSciCorrect) {
                     sciInput.classList.add('input-correct');
-                    fbSci.innerHTML = `<span class="text-emerald-600">Corretto!</span>`;
-                    fbSci.classList.remove('hidden');
                 } else {
                     sciInput.classList.add('input-wrong');
-                    fbSci.innerHTML = `<span class="text-red-600">Sbagliato. Era: ${correctSci}</span>`;
-                    fbSci.classList.remove('hidden');
+                    document.getElementById('feedback-scientific').innerText = `Corretto: ${this.currentWrite.scientific}`;
+                    document.getElementById('feedback-scientific').classList.remove('hidden', 'text-emerald-600');
+                    document.getElementById('feedback-scientific').classList.add('text-red-600');
                 }
-
-                
-                const fbFam = document.getElementById('feedback-family');
-                if(isFamCorrect) {
+        
+                // Family Feedback
+                if (isFamCorrect) {
                     famInput.classList.add('input-correct');
-                    fbFam.innerHTML = `<span class="text-emerald-600">Corretto!</span>`;
-                    fbFam.classList.remove('hidden');
                 } else {
                     famInput.classList.add('input-wrong');
-                    fbFam.innerHTML = `<span class="text-red-600">Sbagliato. Era: ${correctFam}</span>`;
-                    fbFam.classList.remove('hidden');
+                    document.getElementById('feedback-family').innerText = `Corretto: ${this.currentWrite.family}`;
+                    document.getElementById('feedback-family').classList.remove('hidden', 'text-emerald-600');
+                    document.getElementById('feedback-family').classList.add('text-red-600');
                 }
-
+        
                 if(isSciCorrect && isFamCorrect) {
-                    this.writeScore++;
+                    this.writeScore += 20;
                     document.getElementById('write-score').innerText = this.writeScore;
                 }
-
+        
                 this.writeAnswered = true;
                 document.getElementById('write-check-btn').disabled = true;
                 document.getElementById('write-check-btn').classList.add('opacity-50', 'cursor-not-allowed');
@@ -629,14 +589,14 @@
                     }
                 }
             },
-
+        
             nextWriteQuestion() {
                 this.loadWriteQuestion();
             },
-
+        
             updateNav() { lucide.createIcons(); }
         };
-
+        
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
